@@ -8,6 +8,12 @@
 #include "imgui_internal.h"
 #include "MiscUtils.h"
 
+#define MIDDLE_MOUSE_WORKAROUND
+#ifdef MIDDLE_MOUSE_WORKAROUND
+#define SDL_BUTTON(X)  (1 << ((X)-1))
+extern uint8_t SDL_GetMouseState(int *x, int *y);
+#endif
+
 using namespace DFHack;
 
 #include <cmath>
@@ -480,6 +486,10 @@ void impl::new_frame(std::set<df::interface_key> keys, std::map<df::interface_ke
 
     io.MouseDown[0] = pressed_mouse_keys[0];
     io.MouseDown[1] = pressed_mouse_keys[1];
+
+    #ifdef MIDDLE_MOUSE_WORKAROUND
+    io.MouseDown[2] = (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(2));
+    #endif
 
     pressed_mouse_keys = {};
 

@@ -126,6 +126,7 @@ jobs_workshop={
             job_fields={job_type=df.job_type.CatchLiveFish}
         }, -- no items?
     },
+    --this is correct except that the *jobs* mat_type is 0 as well
     [df.workshop_type.Masons]={
         defaults={item_type=df.item_type.BOULDER,item_subtype=-1,vector_id=df.job_item_vector_id.BOULDER, mat_type=0,mat_index=-1,flags3={hard=true}},--flags2={non_economic=true},
         {

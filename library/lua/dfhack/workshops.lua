@@ -217,108 +217,108 @@ jobs_workshop={
         {
             name="make barrel",
             items={{}},
-            job_fields={job_type=df.job_type.MakeBarrel}
+            job_fields={job_type=df.job_type.MakeBarrel, material_category=df.job_material_category.wood}
         },
 
         {
             name="make bucket",
             items={{}},
-            job_fields={job_type=df.job_type.MakeBucket}
+            job_fields={job_type=df.job_type.MakeBucket, material_category=df.job_material_category.wood}
         },
         {
             name="make animal trap",
             items={{}},
-            job_fields={job_type=df.job_type.MakeAnimalTrap}
+            job_fields={job_type=df.job_type.MakeAnimalTrap, material_category=df.job_material_category.wood}
         },
         {
             name="make cage",
             items={{}},
-            job_fields={job_type=df.job_type.MakeCage}
+            job_fields={job_type=df.job_type.MakeCage, material_category=df.job_material_category.wood}
         },
         {
             name="construct bed",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructBed}
+            job_fields={job_type=df.job_type.ConstructBed, material_category=df.job_material_category.wood}
         },
         {
             name="construct bin",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructBin}
+            job_fields={job_type=df.job_type.ConstructBin, material_category=df.job_material_category.wood}
         },
         {
             name="construct armor stand",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructArmorStand}
+            job_fields={job_type=df.job_type.ConstructArmorStand, material_category=df.job_material_category.wood}
         },
         {
             name="construct blocks",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructBlocks}
+            job_fields={job_type=df.job_type.ConstructBlocks, material_category=df.job_material_category.wood}
         },
         {
             name="construct throne",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructThrone}
+            job_fields={job_type=df.job_type.ConstructThrone, material_category=df.job_material_category.wood}
         },
         {
             name="construct coffin",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructCoffin}
+            job_fields={job_type=df.job_type.ConstructCoffin, material_category=df.job_material_category.wood}
         },
         {
             name="construct door",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructDoor}
+            job_fields={job_type=df.job_type.ConstructDoor, material_category=df.job_material_category.wood}
         },
         {
             name="construct floodgate",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructFloodgate}
+            job_fields={job_type=df.job_type.ConstructFloodgate, material_category=df.job_material_category.wood}
         },
         {
             name="construct hatch cover",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructHatchCover}
+            job_fields={job_type=df.job_type.ConstructHatchCover, material_category=df.job_material_category.wood}
         },
         {
             name="construct grate",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructGrate}
+            job_fields={job_type=df.job_type.ConstructGrate, material_category=df.job_material_category.wood}
         },
         {
             name="construct cabinet",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructCabinet}
+            job_fields={job_type=df.job_type.ConstructCabinet, material_category=df.job_material_category.wood}
         },
         {
             name="construct chest",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructChest}
+            job_fields={job_type=df.job_type.ConstructChest, material_category=df.job_material_category.wood}
         },
         {
             name="construct statue",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructStatue}
+            job_fields={job_type=df.job_type.ConstructStatue, material_category=df.job_material_category.wood}
         },
         {
             name="construct table",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructTable}
+            job_fields={job_type=df.job_type.ConstructTable, material_category=df.job_material_category.wood}
         },
         {
             name="construct weapon rack",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructWeaponRack}
+            job_fields={job_type=df.job_type.ConstructWeaponRack, material_category=df.job_material_category.wood}
         },
         {
             name="construct splint",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructSplint}
+            job_fields={job_type=df.job_type.ConstructSplint, material_category=df.job_material_category.wood}
         },
         {
             name="construct crutch",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructCrutch}
+            job_fields={job_type=df.job_type.ConstructCrutch, material_category=df.job_material_category.wood}
         },
     },
     [df.workshop_type.Kitchen]={
@@ -374,22 +374,22 @@ jobs_workshop={
         {
             name="weave plant thread cloth",
             items={{item_type=df.item_type.THREAD,quantity=15000,min_dimension=15000,flags1={collected=true},flags2={plant=true}}},
-            job_fields={job_type=df.job_type.WeaveCloth}
+            job_fields={job_type=df.job_type.WeaveCloth, material_category=df.job_material_category.plant}
         },
         {
             name="weave silk thread cloth",
             items={{item_type=df.item_type.THREAD,quantity=15000,min_dimension=15000,flags1={collected=true},flags2={silk=true}}},
-            job_fields={job_type=df.job_type.WeaveCloth}
+            job_fields={job_type=df.job_type.WeaveCloth, material_category=df.job_material_category.silk}
         },
         {
             name="weave yarn cloth",
             items={{item_type=df.item_type.THREAD,quantity=15000,min_dimension=15000,flags1={collected=true},flags2={yarn=true}}},
-            job_fields={job_type=df.job_type.WeaveCloth}
+            job_fields={job_type=df.job_type.WeaveCloth, material_category=df.job_material_category.yarn}
         },
         {
             name="weave inorganic cloth",
             items={{item_type=df.item_type.THREAD,quantity=15000,min_dimension=15000,flags1={collected=true},mat_type=0}},
-            job_fields={job_type=df.job_type.WeaveCloth}
+            job_fields={job_type=df.job_type.WeaveCloth, material_category=df.job_material_category.strand}
         },
         {
             name="collect webs",
@@ -441,7 +441,7 @@ jobs_workshop={
     },
     [df.workshop_type.Siege]={
         {
-            name="construct balista parts",
+            name="construct ballista parts",
             items={{item_type=df.item_type.WOOD}},
             job_fields={job_type=df.job_type.ConstructBallistaParts}
         },
@@ -451,12 +451,12 @@ jobs_workshop={
             job_fields={job_type=df.job_type.ConstructCatapultParts}
         },
         {
-            name="assemble balista arrow",
+            name="assemble ballista arrow",
             items={{item_type=df.item_type.WOOD}},
             job_fields={job_type=df.job_type.AssembleSiegeAmmo}
         },
         {
-            name="assemble tipped balista arrow",
+            name="assemble tipped ballista arrow",
             items={{item_type=df.item_type.WOOD},{item_type=df.item_type.BALLISTAARROWHEAD}},
             job_fields={job_type=df.job_type.AssembleSiegeAmmo}
         },

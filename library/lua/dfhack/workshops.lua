@@ -2,6 +2,22 @@ local _ENV = mkmodule('dfhack.workshops')
 
 local utils = require 'utils'
 
+function get_subtype_of(class, id)
+    local base_types = class.get_vector()
+
+    for _,v in pairs(base_types) do
+        if v.id == id then
+            return id
+        end
+    end
+
+    return nil
+end
+
+function get_tool_subtype_of(id)
+    return get_subtype_of(df.itemdef_toolst, id)
+end
+
 input_filter_defaults = {
     item_type = -1,
     item_subtype = -1,
@@ -319,6 +335,16 @@ jobs_workshop={
             name="construct crutch",
             items={{}},
             job_fields={job_type=df.job_type.ConstructCrutch, material_category=df.job_material_category.wood}
+        },
+        {
+            name="make wooden wheelbarrow",
+            items={{}},
+            job_fields={job_type=df.job_type.MakeTool, material_category=df.job_material_category.wood, item_subtype=get_tool_subtype_of("ITEM_TOOL_WHEELBARROW")}
+        },
+        {
+            name="make wooden minecart",
+            items={{}},
+            job_fields={job_type=df.job_type.MakeTool, material_category=df.job_material_category.wood, item_subtype=get_tool_subtype_of("ITEM_TOOL_MINECART")}
         },
     },
     [df.workshop_type.Kitchen]={

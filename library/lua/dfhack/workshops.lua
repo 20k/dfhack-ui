@@ -2,22 +2,6 @@ local _ENV = mkmodule('dfhack.workshops')
 
 local utils = require 'utils'
 
-function get_subtype_of(class, id)
-    local base_types = class.get_vector()
-
-    for _,v in pairs(base_types) do
-        if v.id == id then
-            return v.subtype
-        end
-    end
-
-    return nil
-end
-
-function get_tool_subtype_of(id)
-    return get_subtype_of(df.itemdef_toolst, id)
-end
-
 input_filter_defaults = {
     item_type = -1,
     item_subtype = -1,
@@ -233,118 +217,108 @@ jobs_workshop={
         {
             name="make barrel",
             items={{}},
-            job_fields={job_type=df.job_type.MakeBarrel, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.MakeBarrel}
         },
 
         {
             name="make bucket",
             items={{}},
-            job_fields={job_type=df.job_type.MakeBucket, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.MakeBucket}
         },
         {
             name="make animal trap",
             items={{}},
-            job_fields={job_type=df.job_type.MakeAnimalTrap, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.MakeAnimalTrap}
         },
         {
             name="make cage",
             items={{}},
-            job_fields={job_type=df.job_type.MakeCage, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.MakeCage}
         },
         {
             name="construct bed",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructBed, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructBed}
         },
         {
             name="construct bin",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructBin, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructBin}
         },
         {
             name="construct armor stand",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructArmorStand, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructArmorStand}
         },
         {
             name="construct blocks",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructBlocks, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructBlocks}
         },
         {
             name="construct throne",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructThrone, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructThrone}
         },
         {
             name="construct coffin",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructCoffin, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructCoffin}
         },
         {
             name="construct door",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructDoor, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructDoor}
         },
         {
             name="construct floodgate",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructFloodgate, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructFloodgate}
         },
         {
             name="construct hatch cover",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructHatchCover, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructHatchCover}
         },
         {
             name="construct grate",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructGrate, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructGrate}
         },
         {
             name="construct cabinet",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructCabinet, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructCabinet}
         },
         {
             name="construct chest",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructChest, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructChest}
         },
         {
             name="construct statue",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructStatue, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructStatue}
         },
         {
             name="construct table",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructTable, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructTable}
         },
         {
             name="construct weapon rack",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructWeaponRack, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructWeaponRack}
         },
         {
             name="construct splint",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructSplint, material_category=df.job_material_category.wood}
+            job_fields={job_type=df.job_type.ConstructSplint}
         },
         {
             name="construct crutch",
             items={{}},
-            job_fields={job_type=df.job_type.ConstructCrutch, material_category=df.job_material_category.wood}
-        },
-        {
-            name="make wooden wheelbarrow",
-            items={{}},
-            job_fields={job_type=df.job_type.MakeTool, material_category=df.job_material_category.wood, item_subtype_s="ITEM_TOOL_WHEELBARROW"}
-        },
-        {
-            name="make wooden minecart",
-            items={{}},
-            job_fields={job_type=df.job_type.MakeTool, material_category=df.job_material_category.wood, item_subtype_s="ITEM_TOOL_MINECART"}
+            job_fields={job_type=df.job_type.ConstructCrutch}
         },
     },
     [df.workshop_type.Kitchen]={
@@ -400,22 +374,22 @@ jobs_workshop={
         {
             name="weave plant thread cloth",
             items={{item_type=df.item_type.THREAD,quantity=15000,min_dimension=15000,flags1={collected=true},flags2={plant=true}}},
-            job_fields={job_type=df.job_type.WeaveCloth, material_category=df.job_material_category.plant}
+            job_fields={job_type=df.job_type.WeaveCloth}
         },
         {
             name="weave silk thread cloth",
             items={{item_type=df.item_type.THREAD,quantity=15000,min_dimension=15000,flags1={collected=true},flags2={silk=true}}},
-            job_fields={job_type=df.job_type.WeaveCloth, material_category=df.job_material_category.silk}
+            job_fields={job_type=df.job_type.WeaveCloth}
         },
         {
             name="weave yarn cloth",
             items={{item_type=df.item_type.THREAD,quantity=15000,min_dimension=15000,flags1={collected=true},flags2={yarn=true}}},
-            job_fields={job_type=df.job_type.WeaveCloth, material_category=df.job_material_category.yarn}
+            job_fields={job_type=df.job_type.WeaveCloth}
         },
         {
             name="weave inorganic cloth",
             items={{item_type=df.item_type.THREAD,quantity=15000,min_dimension=15000,flags1={collected=true},mat_type=0}},
-            job_fields={job_type=df.job_type.WeaveCloth, material_category=df.job_material_category.strand}
+            job_fields={job_type=df.job_type.WeaveCloth}
         },
         {
             name="collect webs",
@@ -467,7 +441,7 @@ jobs_workshop={
     },
     [df.workshop_type.Siege]={
         {
-            name="construct ballista parts",
+            name="construct balista parts",
             items={{item_type=df.item_type.WOOD}},
             job_fields={job_type=df.job_type.ConstructBallistaParts}
         },
@@ -477,12 +451,12 @@ jobs_workshop={
             job_fields={job_type=df.job_type.ConstructCatapultParts}
         },
         {
-            name="assemble ballista arrow",
+            name="assemble balista arrow",
             items={{item_type=df.item_type.WOOD}},
             job_fields={job_type=df.job_type.AssembleSiegeAmmo}
         },
         {
-            name="assemble tipped ballista arrow",
+            name="assemble tipped balista arrow",
             items={{item_type=df.item_type.WOOD},{item_type=df.item_type.BALLISTAARROWHEAD}},
             job_fields={job_type=df.job_type.AssembleSiegeAmmo}
         },
@@ -500,26 +474,14 @@ local function matchIds(bid1,wid1,cid1,bid2,wid2,cid2)
     end
     return true
 end
-local function scanRawsReaction(buildingId,workshopId,customId,adventure_check)
-    local is_adventure_mode = dfhack.world.isAdventureMode(df.global.gamemode)
-
+local function scanRawsReaction(buildingId,workshopId,customId)
     local ret={}
     for idx,reaction in ipairs(df.global.world.raws.reactions.reactions) do
-        if adventure_check and not is_adventure_mode then
-            for k,v in pairs(reaction.flags) do
-                if k == "ADVENTURE_MODE_ENABLED" and v then
-                    goto nope
-                end
-            end
-        end
-
         for k,v in pairs(reaction.building.type) do
             if matchIds(buildingId,workshopId,customId,v,reaction.building.subtype[k],reaction.building.custom[k]) then
                 table.insert(ret,reaction)
             end
         end
-
-        ::nope::
     end
     return ret
 end
@@ -530,8 +492,8 @@ local function reagentToJobItem(reagent,react_id,reagentId)
     ret_item.reagent_index=reagentId
     return ret_item
 end
-local function addReactionJobs(ret,bid,wid,cid,adventure_check)
-    local reactions=scanRawsReaction(bid,wid or -1,cid or -1,adventure_check)
+local function addReactionJobs(ret,bid,wid,cid)
+    local reactions=scanRawsReaction(bid,wid or -1,cid or -1)
     for idx,react in pairs(reactions) do
     local job={name=react.name,
                items={},job_fields={job_type=df.job_type.CustomReaction,reaction_name=react.code}
@@ -568,7 +530,7 @@ local function addSmeltJobs(ret,use_fuel)
     end
     return ret
 end
-function getJobs(buildingId,workshopId,customId,adventure_check)
+function getJobs(buildingId,workshopId,customId)
     local ret={}
     local c_jobs
     if buildingId==df.building_type.Workshop then
@@ -589,7 +551,7 @@ function getJobs(buildingId,workshopId,customId,adventure_check)
         c_jobs=utils.clone(c_jobs,true)
     end
 
-    addReactionJobs(c_jobs,buildingId,workshopId,customId,adventure_check)
+    addReactionJobs(c_jobs,buildingId,workshopId,customId)
     for jobId,contents in pairs(c_jobs) do
         if jobId~="defaults" then
             local entry={}
@@ -606,12 +568,6 @@ function getJobs(buildingId,workshopId,customId,adventure_check)
             if contents.job_fields~=nil then
                 entry.job_fields={}
                 utils.assign(entry.job_fields,contents.job_fields)
-
-                --todo: all subtypes classes, use a hardcoded list of ids?
-                if entry.job_fields.item_subtype_s then
-                    entry.job_fields.item_subtype = get_tool_subtype_of(entry.job_fields.item_subtype_s)
-                    entry.job_fields.item_subtype_s = nil
-                end
             end
             ret[jobId]=entry
         end

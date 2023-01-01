@@ -500,14 +500,26 @@ local function matchIds(bid1,wid1,cid1,bid2,wid2,cid2)
     end
     return true
 end
-local function scanRawsReaction(buildingId,workshopId,customId)
+local function scanRawsReaction(buildingId,workshopId,customId,adventure_check)
+    local is_adventure_mode = dfhack.world.isAdventureMode(df.global.gamemode)
+
     local ret={}
     for idx,reaction in ipairs(df.global.world.raws.reactions.reactions) do
+        if adventure_check and not is_adventure_mode then
+            for k,v in pairs(reaction.flags) do
+                if k == "ADVENTURE_MODE_ENABLED" and v then
+                    goto nope
+                end
+            end
+        end
+
         for k,v in pairs(reaction.building.type) do
             if matchIds(buildingId,workshopId,customId,v,reaction.building.subtype[k],reaction.building.custom[k]) then
                 table.insert(ret,reaction)
             end
         end
+
+        ::nope::
     end
     return ret
 end
@@ -518,8 +530,8 @@ local function reagentToJobItem(reagent,react_id,reagentId)
     ret_item.reagent_index=reagentId
     return ret_item
 end
-local function addReactionJobs(ret,bid,wid,cid)
-    local reactions=scanRawsReaction(bid,wid or -1,cid or -1)
+local function addReactionJobs(ret,bid,wid,cid,adventure_check)
+    local reactions=scanRawsReaction(bid,wid or -1,cid or -1,adventure_check)
     for idx,react in pairs(reactions) do
     local job={name=react.name,
                items={},job_fields={job_type=df.job_type.CustomReaction,reaction_name=react.code}
@@ -556,7 +568,7 @@ local function addSmeltJobs(ret,use_fuel)
     end
     return ret
 end
-function getJobs(buildingId,workshopId,customId)
+function getJobs(buildingId,workshopId,customId,adventure_check)
     local ret={}
     local c_jobs
     if buildingId==df.building_type.Workshop then
@@ -577,7 +589,7 @@ function getJobs(buildingId,workshopId,customId)
         c_jobs=utils.clone(c_jobs,true)
     end
 
-    addReactionJobs(c_jobs,buildingId,workshopId,customId)
+    addReactionJobs(c_jobs,buildingId,workshopId,customId,adventure_check)
     for jobId,contents in pairs(c_jobs) do
         if jobId~="defaults" then
             local entry={}

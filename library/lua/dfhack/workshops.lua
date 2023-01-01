@@ -7,7 +7,7 @@ function get_subtype_of(class, id)
 
     for _,v in pairs(base_types) do
         if v.id == id then
-            return id
+            return v.subtype
         end
     end
 

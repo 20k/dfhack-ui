@@ -339,12 +339,12 @@ jobs_workshop={
         {
             name="make wooden wheelbarrow",
             items={{}},
-            job_fields={job_type=df.job_type.MakeTool, material_category=df.job_material_category.wood, item_subtype=get_tool_subtype_of("ITEM_TOOL_WHEELBARROW")}
+            job_fields={job_type=df.job_type.MakeTool, material_category=df.job_material_category.wood, item_subtype_s="ITEM_TOOL_WHEELBARROW"}
         },
         {
             name="make wooden minecart",
             items={{}},
-            job_fields={job_type=df.job_type.MakeTool, material_category=df.job_material_category.wood, item_subtype=get_tool_subtype_of("ITEM_TOOL_MINECART")}
+            job_fields={job_type=df.job_type.MakeTool, material_category=df.job_material_category.wood, item_subtype_s="ITEM_TOOL_MINECART"}
         },
     },
     [df.workshop_type.Kitchen]={
@@ -594,6 +594,12 @@ function getJobs(buildingId,workshopId,customId)
             if contents.job_fields~=nil then
                 entry.job_fields={}
                 utils.assign(entry.job_fields,contents.job_fields)
+
+                --todo: all subtypes classes, use a hardcoded list of ids?
+                if entry.job_fields.item_subtype_s then
+                    entry.job_fields.item_subtype = get_tool_subtype_of(entry.job_fields.item_subtype_s)
+                    entry.job_fields.item_subtype_s = nil
+                end
             end
             ret[jobId]=entry
         end

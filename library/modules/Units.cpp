@@ -2012,6 +2012,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
     //modify state
     (*df::global::squad_next_id)++;
     fort->squads.push_back(result->id);
+    df::global::world->squads.all.push_back(result);
 
     return result;
 }

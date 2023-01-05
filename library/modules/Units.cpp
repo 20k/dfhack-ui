@@ -1998,41 +1998,44 @@ df::squad* Units::makeSquad(int32_t assignment_id)
         //df::ui::T_alerts::T_list* current_alert = alerts.list[i];
 
         //hmm
-        //df::squad::T_schedule* sched = new df::squad_schedule_entry[1][12]();
+        df::squad_schedule_entry* asched = (df::squad_schedule_entry*)malloc(sizeof(df::squad_schedule_entry) * 12);
 
-        df::squad_schedule_entry (*asched)[12] = new df::squad_schedule_entry[1][12]();
-
-        for(int s=0; s < 12; s++)
+        for(int kk=0; kk < 12; kk++)
         {
-            //not 100% sure that the size is always squad_size, but testing showed it as 10
-            for(int kk=0; kk < squad_size; kk++)
-            {
-                int32_t* order_assignments = new int32_t();
-                *order_assignments = -1;
-
-                (*asched)[s].order_assignments.push_back(order_assignments);
-            }
-
-            df::squad_schedule_order* order = new df::squad_schedule_order();
-            order->min_count = 10;
-            order->positions.resize(10);
-
-            df::squad_order* s_order = df::allocate<df::squad_order_trainst>();
-
-            s_order->unk_v40_1 = -1;
-            s_order->unk_v40_2 = -1;
-            s_order->year = *df::global::cur_year;
-            s_order->year_tick = *df::global::cur_year_tick;
-            s_order->unk_v40_3 = -1;
-            s_order->unk_1 = 0;
-
-            order->order = s_order;
-
-            (*asched)[s].orders.push_back(order);
+            new (&asched[kk]) df::squad_schedule_entry;
         }
 
-        //df::squad_schedule_entry** pp = new df::squad_schedule_entry*();
-        //*pp = asched;
+        if (i == result->cur_alert_idx)
+        {
+            for(int s=0; s < 12; s++)
+            {
+                //not 100% sure that the size is always squad_size, but testing showed it as 10
+                for(int kk=0; kk < squad_size; kk++)
+                {
+                    int32_t* order_assignments = new int32_t();
+                    *order_assignments = -1;
+
+                    asched[s].order_assignments.push_back(order_assignments);
+                }
+
+                df::squad_schedule_order* order = new df::squad_schedule_order();
+                order->min_count = 10;
+                order->positions.resize(10);
+
+                df::squad_order* s_order = df::allocate<df::squad_order_trainst>();
+
+                s_order->unk_v40_1 = -1;
+                s_order->unk_v40_2 = -1;
+                s_order->year = *df::global::cur_year;
+                s_order->year_tick = *df::global::cur_year_tick;
+                s_order->unk_v40_3 = -1;
+                s_order->unk_1 = 0;
+
+                order->order = s_order;
+
+                asched[s].orders.push_back(order);
+            }
+        }
 
         result->schedule.push_back(reinterpret_cast<df::squad::T_schedule*>(asched));
     }

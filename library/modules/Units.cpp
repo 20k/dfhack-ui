@@ -1956,7 +1956,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
         return nullptr;
 
     df::squad* result = new df::squad();
-    result->id = *df::global::squad_next_id + 1;
+    result->id = *df::global::squad_next_id;
     result->cur_alert_idx = 0;
     result->uniform_priority = result->id + 1; //no idea why, but seems to hold
     result->activity = -1; //??

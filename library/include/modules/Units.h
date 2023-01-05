@@ -37,6 +37,7 @@ distribution.
 #include "df/mental_attribute_type.h"
 #include "df/misc_trait_type.h"
 #include "df/physical_attribute_type.h"
+#include "df/squad.h"
 #include "df/unit.h"
 #include "df/unit_action.h"
 #include "df/unit_action_type_group.h"
@@ -220,6 +221,7 @@ DFHACK_EXPORT std::string getGoalName(df::unit *unit, size_t goalIndex = 0);
 DFHACK_EXPORT bool isGoalAchieved(df::unit *unit, size_t goalIndex = 0);
 
 DFHACK_EXPORT std::string getSquadName(df::unit *unit);
+DFHACK_EXPORT df::squad* makeSquad(int32_t assignment_id);
 
 DFHACK_EXPORT df::activity_entry *getMainSocialActivity(df::unit *unit);
 DFHACK_EXPORT df::activity_event *getMainSocialEvent(df::unit *unit);

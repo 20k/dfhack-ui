@@ -61,6 +61,7 @@ using namespace std;
 #include "df/entity_raw_flags.h"
 #include "df/identity_type.h"
 #include "df/game_mode.h"
+#include "df/global_objects.h"
 #include "df/histfig_entity_link_positionst.h"
 #include "df/histfig_relationship_type.h"
 #include "df/historical_entity.h"
@@ -72,6 +73,10 @@ using namespace std;
 #include "df/job.h"
 #include "df/nemesis_record.h"
 #include "df/squad.h"
+#include "df/squad_position.h"
+#include "df/squad_schedule_order.h"
+#include "df/squad_order.h"
+#include "df/squad_order_trainst.h"
 #include "df/tile_occupancy.h"
 #include "df/plotinfost.h"
 #include "df/unit_inventory_item.h"
@@ -1944,6 +1949,143 @@ std::string Units::getSquadName(df::unit *unit)
     if (squad->alias.size() > 0)
         return squad->alias;
     return Translation::TranslateName(&squad->name, true);
+}
+
+//only works for making squads for fort mode player controlled dwarf squads
+//could be extended straightforwardly by passing in entity
+df::squad* Units::makeSquad(int32_t assignment_id)
+{
+    if (df::global::squad_next_id == nullptr || df::global::ui == nullptr)
+        return nullptr;
+
+    df::language_name name;
+    name.type = df::language_name_type::Squad;
+
+    for (int i=0; i < 7; i++)
+    {
+        name.words[i] = -1;
+        name.parts_of_speech[i] = df::part_of_speech::Noun;
+    }
+
+    df::historical_entity* fort = df::historical_entity::find(df::global::ui->group_id);
+
+    df::entity_position_assignment* found_assignment = nullptr;
+
+    for (auto* assignment : fort->positions.assignments)
+    {
+        if (assignment->id == assignment_id)
+        {
+            found_assignment = assignment;
+            break;
+        }
+    }
+
+    if (found_assignment == nullptr)
+        return nullptr;
+
+    df::entity_position* corresponding_position = nullptr;
+
+    for (auto* position : fort->positions.own)
+    {
+        if (position->id == found_assignment->position_id)
+        {
+            corresponding_position = position;
+            break;
+        }
+    }
+
+    if (corresponding_position == nullptr)
+        return nullptr;
+
+    df::squad* result = new df::squad();
+    result->id = *df::global::squad_next_id;
+    result->cur_alert_idx = 0;
+    result->uniform_priority = result->id + 1; //no idea why, but seems to hold
+    result->activity = -1; //??
+    result->carry_food = 2;
+    result->carry_water = 1;
+    result->entity_id = df::global::ui->group_id;
+    result->leader_position = corresponding_position->id;
+    result->leader_assignment = found_assignment->id;
+    result->unk_1 = -1;
+    result->name = name;
+
+    int16_t squad_size = corresponding_position->squad_size;
+
+    for (int i=0; i < squad_size; i++)
+    {
+        //construct for squad_position seems to set all the attributes correctly
+        //except I've observed unk_2 is -1 generally
+        df::squad_position* pos = new df::squad_position();
+        pos->unk_2 = -1;
+        pos->flags.whole = 0;
+
+        result->positions.push_back(pos);
+    }
+
+    df::ui::T_alerts& alerts = df::global::ui->alerts;
+
+    //hideous memory allocation function, schedule is initialised as the current number
+    //of alerts
+    //when alerts are added and removed the .schedule vector is resized, so there's a
+    //1:1 correspondance. I have a sneaking suspicion that there only used to be
+    //one global schedule entry table, which is why this is all so convoluted
+    for(int i=0; i < (int)alerts.list.size(); i++)
+    {
+        //unused
+        //df::ui::T_alerts::T_list* current_alert = alerts.list[i];
+
+        //hmm
+        df::squad_schedule_entry* asched = (df::squad_schedule_entry*)malloc(sizeof(df::squad_schedule_entry) * 12);
+
+        for(int kk=0; kk < 12; kk++)
+        {
+            new (&asched[kk]) df::squad_schedule_entry;
+        }
+
+        if (i == result->cur_alert_idx)
+        {
+            for(int s=0; s < 12; s++)
+            {
+                //not 100% sure that the size is always squad_size, but testing showed it as 10
+                for(int kk=0; kk < squad_size; kk++)
+                {
+                    int32_t* order_assignments = new int32_t();
+                    *order_assignments = -1;
+
+                    asched[s].order_assignments.push_back(order_assignments);
+                }
+
+                df::squad_schedule_order* order = new df::squad_schedule_order();
+                order->min_count = 10;
+                order->positions.resize(10);
+
+                df::squad_order* s_order = df::allocate<df::squad_order_trainst>();
+
+                s_order->unk_v40_1 = -1;
+                s_order->unk_v40_2 = -1;
+                s_order->year = *df::global::cur_year;
+                s_order->year_tick = *df::global::cur_year_tick;
+                s_order->unk_v40_3 = -1;
+                s_order->unk_1 = 0;
+
+                order->order = s_order;
+
+                asched[s].orders.push_back(order);
+            }
+        }
+
+        result->schedule.push_back(reinterpret_cast<df::squad::T_schedule*>(asched));
+    }
+
+    //all we've done so far is leak memory if anything goes wrong
+    //modify state
+    (*df::global::squad_next_id)++;
+    fort->squads.push_back(result->id);
+    df::global::world->squads.all.push_back(result);
+    found_assignment->squad_id = result->id;
+
+    return result;
 }
 
 df::activity_entry *Units::getMainSocialActivity(df::unit *unit)

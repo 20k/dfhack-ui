@@ -74,6 +74,9 @@ using namespace std;
 #include "df/nemesis_record.h"
 #include "df/squad.h"
 #include "df/squad_position.h"
+#include "df/squad_schedule_order.h"
+#include "df/squad_order.h"
+#include "df/squad_order_trainst.h"
 #include "df/tile_occupancy.h"
 #include "df/ui.h"
 #include "df/unit_inventory_item.h"
@@ -1918,6 +1921,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
         return nullptr;
 
     df::language_name name;
+    name.type = df::language_name_type::Squad;
 
     for (int i=0; i < 7; i++)
     {
@@ -1966,6 +1970,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
     result->leader_position = corresponding_position->id;
     result->leader_assignment = found_assignment->id;
     result->unk_1 = -1;
+    result->name = name;
 
     int16_t squad_size = corresponding_position->squad_size;
 
@@ -1975,6 +1980,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
         //except I've observed unk_2 is -1 generally
         df::squad_position* pos = new df::squad_position();
         pos->unk_2 = -1;
+        pos->flags.whole = 0;
 
         result->positions.push_back(pos);
     }
@@ -1992,7 +1998,9 @@ df::squad* Units::makeSquad(int32_t assignment_id)
         //df::ui::T_alerts::T_list* current_alert = alerts.list[i];
 
         //hmm
-        df::squad::T_schedule* sched = new df::squad_schedule_entry[1][12]();
+        //df::squad::T_schedule* sched = new df::squad_schedule_entry[1][12]();
+
+        df::squad_schedule_entry (*asched)[12] = new df::squad_schedule_entry[1][12]();
 
         for(int s=0; s < 12; s++)
         {
@@ -2002,11 +2010,31 @@ df::squad* Units::makeSquad(int32_t assignment_id)
                 int32_t* order_assignments = new int32_t();
                 *order_assignments = -1;
 
-                (*sched)[s].order_assignments.push_back(order_assignments);
+                (*asched)[s].order_assignments.push_back(order_assignments);
+
+                df::squad_schedule_order* order = new df::squad_schedule_order();
+                order->min_count = 10;
+                order->positions.resize(10);
+
+                df::squad_order* s_order = df::allocate<df::squad_order_trainst>();
+
+                s_order->unk_v40_1 = -1;
+                s_order->unk_v40_2 = -1;
+                s_order->year = *df::global::cur_year;
+                s_order->year_tick = *df::global::cur_year_tick;
+                s_order->unk_v40_3 = -1;
+                s_order->unk_1 = 0;
+
+                order->order = s_order;
+
+                (*asched)[s].orders.push_back(order);
             }
         }
 
-        result->schedule.push_back(sched);
+        //df::squad_schedule_entry** pp = new df::squad_schedule_entry*();
+        //*pp = asched;
+
+        result->schedule.push_back(reinterpret_cast<df::squad::T_schedule*>(asched));
     }
 
     //all we've done so far is leak memory if anything goes wrong
@@ -2014,6 +2042,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
     (*df::global::squad_next_id)++;
     fort->squads.push_back(result->id);
     df::global::world->squads.all.push_back(result);
+    found_assignment->squad_id = result->id;
 
     return result;
 }

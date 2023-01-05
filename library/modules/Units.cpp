@@ -1991,21 +1991,22 @@ df::squad* Units::makeSquad(int32_t assignment_id)
         //unused
         //df::ui::T_alerts::T_list* current_alert = alerts.list[i];
 
-        df::squad_schedule_entry* array_part = new df::squad_schedule_entry[12]();
+        //hmm
+        df::squad::T_schedule* sched = new df::squad_schedule_entry[1][12]();
 
-        //not 100% sure that the size is always squad_size, but testing showed it as 10
-        for(int kk=0; kk < squad_size; kk++)
+        for(int s=0; s < 12; s++)
         {
-            int32_t* order_assignments = new int32_t();
-            *order_assignments = -1;
+            //not 100% sure that the size is always squad_size, but testing showed it as 10
+            for(int kk=0; kk < squad_size; kk++)
+            {
+                int32_t* order_assignments = new int32_t();
+                *order_assignments = -1;
 
-            array_part->order_assignments.push_back(order_assignments);
+                (*sched)[s].order_assignments.push_back(order_assignments);
+            }
         }
 
-        df::squad_schedule_entry** pointer_pointer = new df::squad_schedule_entry*;
-        *pointer_pointer = array_part;
-
-        result->schedule.push_back(reinterpret_cast<df::squad::T_schedule*>(pointer_pointer));
+        result->schedule.push_back(sched);
     }
 
     //all we've done so far is leak memory if anything goes wrong

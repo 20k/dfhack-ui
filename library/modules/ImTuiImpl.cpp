@@ -124,12 +124,12 @@ void ScanLine(int x1, int y1, int x2, int y2, int ymax, std::vector<int>& xrange
     }
 }
 
-void drawTriangle(ImVec2 p0, ImVec2 p1, ImVec2 p2, ImU32 col, ImVec4 clip_rect) {
+void drawTriangle(ImVec2 p0, ImVec2 p1, ImVec2 p2, ImU32 col, ImVec4 clip_rect, std::map<std::pair<int, int>, Screen::Pen>& captured, std::map<std::pair<int, int>, Screen::Pen>& post_blit) {
     df::coord2d dim = Screen::getWindowSize();
 
     std::vector<int> g_xrange;
 
-    int screen_size = dim.x * dim.y;
+    //int screen_size = dim.x * dim.y;
 
     int ymin = std::floor(std::min(std::min(p0.y, p1.y), p2.y));
     int ymax = std::floor(std::max(std::max(p0.y, p1.y), p2.y));
@@ -173,10 +173,19 @@ void drawTriangle(ImVec2 p0, ImVec2 p1, ImVec2 p2, ImU32 col, ImVec4 clip_rect) 
                         continue;
                     }
 
-                    //todo: colours
-                    const Screen::Pen pen(0, col4.x, col4.y);
+                    std::pair<int, int> pos = {x, cy};
 
-                    Screen::paintString(pen, x, cy, " ");
+                    if (captured.find(pos) == captured.end())
+                    {
+                        captured[pos] = Screen::readTile(x, cy);
+                    }
+
+                    //todo: colours
+                    const Screen::Pen pen(' ', col4.x, col4.y);
+
+                    Screen::paintTile(pen, x, cy);
+
+                    post_blit[pos] = pen;
                 }
                 ++x;
             }
@@ -184,13 +193,21 @@ void drawTriangle(ImVec2 p0, ImVec2 p1, ImVec2 p2, ImU32 col, ImVec4 clip_rect) 
     }
 }
 
+struct blit_info
+{
+    std::map<std::pair<int, int>, Screen::Pen> on_buffer_prior;
+    std::map<std::pair<int, int>, Screen::Pen> on_buffer_post;
+
+    std::map<std::pair<int, int>, Screen::Pen> last_captured;
+};
+
 namespace impl
 {
     void init_current_context();
 
     void new_frame(std::set<df::interface_key> keys, std::map<df::interface_key, int>& danger_key_frames, std::array<int, 2>& pressed_mouse_keys);
 
-    void draw_frame(ImDrawData* drawData);
+    void draw_frame(blit_info& blit_cache, ImDrawData* drawData);
 
     void reset_input();
 }
@@ -211,6 +228,8 @@ struct ui_state
 
     ImGuiContext* last_context;
     ImGuiContext* ctx;
+
+    blit_info blit_cache;
 
     ui_state();
     ~ui_state();
@@ -491,14 +510,42 @@ void impl::new_frame(std::set<df::interface_key> keys, std::map<df::interface_ke
     ImGui::NewFrame();
 }
 
-void impl::draw_frame(ImDrawData* drawData)
+void impl::draw_frame(blit_info& blit_cache, ImDrawData* drawData)
 {
+    /*
+    So. Need to sample whats currently on the buffer
+    then need to blit my own stuff on top
+    then where I haven't drawn since.. the last buffer refresh?
+    need to plaster over what was previously on the buffer
+    somehow I need to detect if the underlying buffer has been updated
+
+    ideally: frame 1. Capture, blit,
+    Frame 2: If the window doesn't move, great
+    Frame 2: If the window moves and the game is paused, want to blit over the old tiles
+    Frame 2: If the window moves and the game is unpaused, hopefully the underlying buffer is refreshed, want to capture it and blit over the top
+
+    So. When I blit, i want to capture the frames I've blit, and use that to detect whether or not the tile got changed in my absence
+
+
+    Frame 1: Capture input, blit, capture post blit
+    Frame 2: If window moves: Capture input, check post blit against input, if post blit != input then something rendered. If post blit == input, then
+    We're good to trample over it? Because we own that tile
+
+    so. When we actually render the captured buffer, we want to remove it and release it from our control, not our problem
+    Ideally would do this in the post render step, or we need to keep a per-layer capture buffer?
+    */
+
     int fb_width = (int)(drawData->DisplaySize.x * drawData->FramebufferScale.x);
     int fb_height = (int)(drawData->DisplaySize.y * drawData->FramebufferScale.y);
 
     if (fb_width <= 0 || fb_height <= 0) {
         return;
     }
+
+    using cache_type = std::map<std::pair<int, int>, Screen::Pen>;
+
+    cache_type captured;
+    cache_type post_blit;
 
     // Will project scissor/clipping rectangles into framebuffer space
     ImVec2 clip_off = drawData->DisplayPos;         // (0,0) unless using multi-viewports
@@ -575,6 +622,15 @@ void impl::draw_frame(ImDrawData* drawData)
 
                                 const Screen::Pen current_bg = Screen::readTile(xx, yy);
 
+                                //captured[std::pair<int, int>{xx, yy}] = current_bg;
+
+                                std::pair<int, int> pos = {xx, yy};
+
+                                if (captured.find(pos) == captured.end())
+                                {
+                                    captured[pos] = Screen::readTile(xx, yy);
+                                }
+
                                 std::string as_df = UTF2DF(as_utf8);
 
                                 if (as_df.size() == 1)
@@ -584,24 +640,77 @@ void impl::draw_frame(ImDrawData* drawData)
 
                                     //Screen::paintString(pen, xx, yy, std::string(1, c));
                                     Screen::paintTile(pen, xx, yy);
+
+                                    post_blit[pos] = pen;
                                 }
                                 else
                                 {
                                     const Screen::Pen pen('?', col4.x, current_bg.bg);
 
                                     Screen::paintTile(pen, xx, yy);
+
+                                    post_blit[pos] = pen;
                                 }
                             }
                             i += 3;
                         }
                         else {
-                            drawTriangle(pos0, pos1, pos2, col0, clip_rect);
+                            drawTriangle(pos0, pos1, pos2, col0, clip_rect, captured, post_blit);
                         }
                     }
                 }
             }
         }
     }
+
+    //so
+    //post blit here is the list of tiles we own
+    //captured is what was just on the buffer
+    //we want to take the old captured (just for our window mumble mumble)
+    //and blit what's *not* in post blit into the buffer
+    //then swap it for captured
+
+    //then we want to take whats in post blit, and then go through current captured, and save that (which is just current captured)
+    //then, we want to take whats in post blit, and look through *old* captured, and overwrite current captured with *old* captured
+
+    std::cout << "Current capture size " << captured.size() << std::endl;
+    std::cout << "Last capture size " << blit_cache.last_captured.size() << std::endl;
+    std::cout << "Post Blit size " << post_blit.size() << std::endl;
+
+    int blitted_count = 0;
+
+    //for (auto& [pos, pen] : blit_cache.last_captured)
+    for (const auto& vals : blit_cache.last_captured)
+    {
+        std::pair<int, int> pos = vals.first;
+        Screen::Pen pen = vals.second;
+
+        auto was_just_written = post_blit.find(pos) != post_blit.end();
+
+        if (was_just_written)
+            continue;
+
+        Screen::paintTile(pen, pos.first, pos.second);
+        blitted_count++;
+
+        std::cout << "Painted " << pen.fg << " " << pen.bg << " ch " << pen.ch << " " << pen.tile << std::endl;
+    }
+
+    std::cout << "Blitted count " << blitted_count << std::endl;
+
+    for (const auto& vals : post_blit)
+    {
+        std::pair<int, int> pos = vals.first;
+
+        auto old_it = blit_cache.last_captured.find(pos);
+
+        if (old_it != blit_cache.last_captured.end())
+        {
+            captured[pos] = old_it->second;
+        }
+    }
+
+    blit_cache.last_captured = std::move(captured);
 }
 
 void impl::reset_input()
@@ -664,7 +773,7 @@ void ui_state::new_frame()
 
 void ui_state::draw_frame(ImDrawData* drawData)
 {
-    impl::draw_frame(drawData);
+    impl::draw_frame(blit_cache, drawData);
 }
 
 void ui_state::deactivate()

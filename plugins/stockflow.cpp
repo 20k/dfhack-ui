@@ -4,7 +4,7 @@
  * or set AUTOENABLE to true.
  */
 
-#include "uicommon.h"
+//#include "uicommon.h"
 #include "LuaTools.h"
 
 #include "df/building_stockpilest.h"
@@ -14,6 +14,47 @@
 #include "modules/Gui.h"
 #include "modules/Maps.h"
 #include "modules/World.h"
+
+#include <algorithm>
+#include <cctype>
+#include <functional>
+#include <locale>
+#include <map>
+#include <string>
+#include <set>
+
+#include "Core.h"
+#include "MiscUtils.h"
+#include <Console.h>
+#include <Export.h>
+#include <PluginManager.h>
+#include <VTableInterpose.h>
+
+#include "modules/Items.h"
+#include "modules/Screen.h"
+#include "modules/World.h"
+
+#include "df/building_stockpilest.h"
+#include "df/caravan_state.h"
+#include "df/dfhack_material_category.h"
+#include "df/enabler.h"
+#include "df/item_quality.h"
+#include "df/plotinfost.h"
+#include "df/world.h"
+
+using namespace std;
+using std::string;
+using std::vector;
+using std::map;
+using std::set;
+
+using namespace DFHack;
+using namespace df::enums;
+
+#define COLOR_TITLE COLOR_BROWN
+#define COLOR_UNSELECTED COLOR_GREY
+#define COLOR_SELECTED COLOR_WHITE
+#define COLOR_HIGHLIGHTED COLOR_GREEN
 
 using namespace DFHack;
 using namespace std;
@@ -178,7 +219,7 @@ public:
     }
 
     void draw(building_stockpilest *sp) {
-        if (sp->id != stockpile_id) {
+        /*if (sp->id != stockpile_id) {
             if (!collect_settings(sp)) {
                 Core::printerr("Stockflow job collection failed!\n");
                 return;
@@ -200,7 +241,7 @@ public:
 
         OutputHotkeyString(x, y, current_job, "j", true, left_margin, COLOR_WHITE, COLOR_LIGHTRED);
         if (*current_trigger)
-            OutputHotkeyString(x, y, current_trigger, "   J", true, left_margin, COLOR_WHITE, COLOR_LIGHTRED);
+            OutputHotkeyString(x, y, current_trigger, "   J", true, left_margin, COLOR_WHITE, COLOR_LIGHTRED);*/
     }
 
 
@@ -242,7 +283,7 @@ struct stockflow_hook : public df::viewscreen_dwarfmodest {
     typedef df::viewscreen_dwarfmodest interpose_base;
 
     bool handleInput(set<df::interface_key> *input) {
-        if (Gui::inRenameBuilding())
+        /*if (Gui::inRenameBuilding())
             return false;
 
         building_stockpilest *sp = get_selected_stockpile();
@@ -263,7 +304,7 @@ struct stockflow_hook : public df::viewscreen_dwarfmodest {
             }
 
             return true;
-        }
+        }*/
 
         return false;
     }
@@ -276,9 +317,9 @@ struct stockflow_hook : public df::viewscreen_dwarfmodest {
     DEFINE_VMETHOD_INTERPOSE(void, render, ()) {
         INTERPOSE_NEXT(render)();
 
-        building_stockpilest *sp = get_selected_stockpile();
+        /*building_stockpilest *sp = get_selected_stockpile();
         if (sp)
-            helper.draw(sp);
+            helper.draw(sp);*/
     }
 };
 

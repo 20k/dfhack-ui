@@ -505,6 +505,9 @@ function buildings.constructBuilding(info)
             if info.full_rectangle and area ~= r_area then
                 return nil, "not all tiles can be used"
             end
+            if info.dryrun then
+                return true, "Dry Run"
+            end
             if info.abstract then
                 ok = buildings.constructAbstract(instance)
             elseif info.items then

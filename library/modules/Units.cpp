@@ -1917,7 +1917,7 @@ std::string Units::getSquadName(df::unit *unit)
 //could be extended straightforwardly by passing in entity
 df::squad* Units::makeSquad(int32_t assignment_id)
 {
-    if (df::global::squad_next_id == nullptr || df::global::ui == nullptr)
+    if (df::global::squad_next_id == nullptr || df::global::plotinfo == nullptr)
         return nullptr;
 
     df::language_name name;
@@ -1929,7 +1929,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
         name.parts_of_speech[i] = df::part_of_speech::Noun;
     }
 
-    df::historical_entity* fort = df::historical_entity::find(df::global::ui->group_id);
+    df::historical_entity* fort = df::historical_entity::find(df::global::plotinfo->group_id);
 
     df::entity_position_assignment* found_assignment = nullptr;
 
@@ -1966,7 +1966,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
     result->activity = -1; //??
     result->carry_food = 2;
     result->carry_water = 1;
-    result->entity_id = df::global::ui->group_id;
+    result->entity_id = df::global::plotinfo->group_id;
     result->leader_position = corresponding_position->id;
     result->leader_assignment = found_assignment->id;
     result->unk_1 = -1;
@@ -1985,7 +1985,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
         result->positions.push_back(pos);
     }
 
-    df::ui::T_alerts& alerts = df::global::ui->alerts;
+    const auto& alerts = df::global::plotinfo->alerts;
 
     //hideous memory allocation function, schedule is initialised as the current number
     //of alerts

@@ -837,11 +837,9 @@ df::unit *Gui::getAnyUnit(df::viewscreen *top)
     if (auto dfscreen = dfhack_viewscreen::try_cast(top))
         return dfscreen->getSelectedUnit();
 
-#if 0
     if (game->main_interface.view_sheets.open
             && game->main_interface.view_sheets.active_sheet == view_sheet_type::UNIT)
         return df::unit::find(game->main_interface.view_sheets.active_id);
-#endif
 
 /* TODO: understand how this changes for v50
     using namespace ui_sidebar_mode;
@@ -1130,11 +1128,9 @@ df::item *Gui::getAnyItem(df::viewscreen *top)
     if (auto dfscreen = dfhack_viewscreen::try_cast(top))
         return dfscreen->getSelectedItem();
 
-#if 0
     if (game->main_interface.view_sheets.open
             && game->main_interface.view_sheets.active_sheet == view_sheet_type::ITEM)
         return df::item::find(game->main_interface.view_sheets.active_id);
-#endif
 
 /* TODO: understand how this changes for v50
     using namespace ui_sidebar_mode;
@@ -1281,11 +1277,9 @@ df::building *Gui::getAnyBuilding(df::viewscreen *top)
     if (auto dfscreen = dfhack_viewscreen::try_cast(top))
         return dfscreen->getSelectedBuilding();
 
-#if 0
     if (game->main_interface.view_sheets.open
             && game->main_interface.view_sheets.active_sheet == view_sheet_type::BUILDING)
         return df::building::find(game->main_interface.view_sheets.active_id);
-#endif
 
 /* TODO: understand how this changes for v50
     using namespace ui_sidebar_mode;
@@ -2057,10 +2051,8 @@ bool Gui::revealInDwarfmodeMap(int32_t x, int32_t y, int32_t z, bool center)
     *window_x = clip_range(new_win_x, 0, (world->map.x_count - w));
     *window_y = clip_range(new_win_y, 0, (world->map.y_count - h));
     *window_z = clip_range(new_win_z, 0, (world->map.z_count - 1));
-    #if 0
     game->minimap.update = true;
     game->minimap.mustmake = true;
-    #endif
 
     return true;
 }

@@ -1284,7 +1284,7 @@ bool Buildings::deconstruct(df::building *bld)
     {
         auto item = ui_look_list->items[i];
         if (item->type == df::ui_look_list::T_items::Building &&
-            item->data.Building->id == id)
+            item->data.building.bld_id == id)
         {
             vector_erase_at(ui_look_list->items, i);
             delete item;

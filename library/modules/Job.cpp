@@ -592,6 +592,7 @@ std::string Job::getName(df::job *job)
     CHECK_NULL_POINTER(job);
 
     std::string desc;
+    #if 0
     auto button = df::allocate<df::interface_button_building_new_jobst>();
     button->mstring = job->reaction_name;
     button->spec_id = job->hist_figure_id;
@@ -605,6 +606,7 @@ std::string Job::getName(df::job *job)
 
     button->text(&desc);
     delete button;
+    #endif
 
     return desc;
 }

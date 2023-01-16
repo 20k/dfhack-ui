@@ -181,9 +181,18 @@ static void add_building_to_zone(df::building* bld, df::building_civzonest* zone
     zone->contained_buildings.push_back(bld);
 }
 
-static void add_building_to_all_zones(df::building* bld)
+static bool is_suitable_building_for_zoning(df::building* bld)
 {
     if (!bld->canBeRoom())
+        return false;
+
+    //purely a workaround for the filter-zone-crash issue
+    return bld->isActual() && bld->getBuildStage() > 0;
+}
+
+static void add_building_to_all_zones(df::building* bld)
+{
+    if (!is_suitable_building_for_zoning(bld))
         return;
 
     df::coord coord(bld->centerx, bld->centery, bld->z);
@@ -209,7 +218,7 @@ void buildings_zoneWatch(uint32_t frame)
 
     for (df::building* bld : vec)
     {
-        if (bld->canBeRoom() && bld->isActual() && bld->getBuildStage() > 0)
+        if (is_suitable_building_for_zoning(bld))
         {
             add_building_to_all_zones(bld);
         }
@@ -1166,7 +1175,7 @@ bool Buildings::constructAbstract(df::building *bld)
             {
                 zone->zone_num = getMaxCivzoneId() + 1;
 
-                /*auto &vec = df::building::get_vector();
+                auto &vec = df::building::get_vector();
 
                 for (size_t i = 0; i < vec.size(); i++)
                 {
@@ -1175,11 +1184,7 @@ bool Buildings::constructAbstract(df::building *bld)
                     if (bld->z != against->z)
                         continue;
 
-                    //this is a guess, the observed kinds are:
-                    //door, coffin, bed, statue, archerytarget, box chair table, cabinet
-                    //weaponrack armorstand tractionbench
-                    //excluded are workshops and farm plots. Furnaces are untested
-                    if (!against->canBeRoom())
+                    if (!is_suitable_building_for_zoning(against))
                         continue;
 
                     int32_t cx = against->centerx;
@@ -1195,7 +1200,7 @@ bool Buildings::constructAbstract(df::building *bld)
                     }
 
                     zone->contained_buildings.push_back(against);
-                }*/
+                }
             }
             break;
 
@@ -1291,6 +1296,7 @@ bool Buildings::constructWithItems(df::building *bld, std::vector<df::item*> ite
             bld->mat_index = items[i]->getMaterialIndex();
     }
 
+    //this technically could happen as the game seems to deal with this correctly, but keeping parity with constructWithFilters
     //add_building_to_all_zones(bld);
 
     createDesign(bld, rough);

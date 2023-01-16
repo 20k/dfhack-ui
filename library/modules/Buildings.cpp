@@ -1053,7 +1053,6 @@ static int getMaxStockpileId()
     return max_id;
 }
 
-/* TODO: understand how this changes for v50
 static int getMaxCivzoneId()
 {
     auto &vec = world->buildings.other[buildings_other_id::ANY_ZONE];
@@ -1068,7 +1067,36 @@ static int getMaxCivzoneId()
 
     return max_id;
 }
-*/
+
+static void add_building_to_zone(df::building* bld, df::building_civzonest* zone)
+{
+    if (!bld->canBeRoom())
+        return;
+
+    for (size_t bid = 0; bid < zone->contained_buildings.size(); bid++)
+    {
+        if (zone->contained_buildings[bid] == bld)
+            return;
+    }
+
+    zone->contained_buildings.push_back(bld);
+}
+
+static void add_building_to_all_zones(df::building* bld)
+{
+    if (!bld->canBeRoom())
+        return;
+
+    df::coord coord(bld->centerx, bld->centery, bld->z);
+
+    std::vector<df::building_civzonest*> cv;
+    Buildings::findCivzonesAt(&cv, coord);
+
+    for (size_t i=0; i < cv.size(); i++)
+    {
+        add_building_to_zone(bld, cv[i]);
+    }
+}
 
 bool Buildings::constructAbstract(df::building *bld)
 {
@@ -1087,12 +1115,43 @@ bool Buildings::constructAbstract(df::building *bld)
                 stock->stockpile_number = getMaxStockpileId() + 1;
             break;
 
-/* TODO: understand how this changes for v50
         case building_type::Civzone:
             if (auto zone = strict_virtual_cast<df::building_civzonest>(bld))
+            {
                 zone->zone_num = getMaxCivzoneId() + 1;
+
+                auto &vec = df::building::get_vector();
+
+                for (size_t i = 0; i < vec.size(); i++)
+                {
+                    auto against = vec[i];
+
+                    if (bld->z != against->z)
+                        continue;
+
+                    //this is a guess, the observed kinds are:
+                    //door, coffin, bed, statue, archerytarget, box chair table, cabinet
+                    //weaponrack armorstand tractionbench
+                    //excluded are workshops and farm plots. Furnaces are untested
+                    if (!against->canBeRoom())
+                        continue;
+
+                    int32_t cx = against->centerx;
+                    int32_t cy = against->centery;
+
+                    df::coord2d coord(cx, cy);
+
+                    if (bld->room.extents && bld->isExtentShaped())
+                    {
+                        auto etile = getExtentTile(bld->room, coord);
+                        if (!etile || !*etile)
+                            continue;
+                    }
+
+                    zone->contained_buildings.push_back(against);
+                }
+            }
             break;
-*/
 
         default:
             break;

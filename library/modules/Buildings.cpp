@@ -1098,6 +1098,33 @@ static void add_building_to_all_zones(df::building* bld)
     }
 }
 
+static void remove_building_from_zone(df::building* bld, df::building_civzonest* zone)
+{
+    for (int bid = 0; bid < (int)zone->contained_buildings.size(); bid++)
+    {
+        if (zone->contained_buildings[bid] == bld)
+        {
+            zone->contained_buildings.erase(zone->contained_buildings.begin() + bid);
+            bid--;
+        }
+    }
+}
+
+static void remove_building_from_all_zones(df::building* bld)
+{
+    //if !bld->canberoom?
+
+    df::coord coord(bld->centerx, bld->centery, bld->z);
+
+    std::vector<df::building_civzonest*> cv;
+    Buildings::findCivzonesAt(&cv, coord);
+
+    for (size_t i=0; i < cv.size(); i++)
+    {
+        remove_building_from_zone(bld, cv[i]);
+    }
+}
+
 bool Buildings::constructAbstract(df::building *bld)
 {
     CHECK_NULL_POINTER(bld);
@@ -1245,6 +1272,8 @@ bool Buildings::constructWithItems(df::building *bld, std::vector<df::item*> ite
             bld->mat_index = items[i]->getMaterialIndex();
     }
 
+    add_building_to_all_zones(bld);
+
     createDesign(bld, rough);
     return true;
 }
@@ -1291,6 +1320,8 @@ bool Buildings::constructWithFilters(df::building *bld, std::vector<df::job_item
 
     buildings_do_onupdate = true;
 
+    add_building_to_all_zones(bld);
+
     createDesign(bld, rough);
     return true;
 }
@@ -1331,6 +1362,9 @@ bool Buildings::deconstruct(df::building *bld)
     // Don't clear arrows.
 
     bld->uncategorize();
+
+    remove_building_from_all_zones(bld);
+
     delete bld;
 
     if (world->selected_building == bld)

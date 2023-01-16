@@ -216,6 +216,8 @@ void buildings_zoneWatch(uint32_t frame)
 {
     auto& vec = df::building::get_vector();
 
+    //todo: as we're doing this, every time we hit a fresh civzone, build a <set> of buildings in a zone
+    //so that it is amortised O(log(n)) lookup, rather than O(n)
     for (df::building* bld : vec)
     {
         if (is_suitable_building_for_zoning(bld))

@@ -189,18 +189,18 @@ static void zone_into_building_unidir(df::building* bld, df::building_civzonest*
     insert_into_vector(bld->relations, &df::building_civzonest::id, zone);
 }
 
-static bool is_suitable_building_for_zoning(df::building* bld)
-{
-    return bld->canMakeRoom();
-}
-
 static void add_building_to_zone(df::building* bld, df::building_civzonest* zone)
 {
-    if (!is_suitable_building_for_zoning(bld))
+    if (!bld->canBeRoom())
         return;
 
     building_into_zone_unidir(bld, zone);
     zone_into_building_unidir(bld, zone);
+}
+
+static bool is_suitable_building_for_zoning(df::building* bld)
+{
+    return bld->canBeRoom();
 }
 
 static void add_building_to_all_zones(df::building* bld)
@@ -1133,6 +1133,40 @@ static int getMaxCivzoneId()
     return max_id;
 }
 
+static void remove_building_from_zone(df::building* bld, df::building_civzonest* zone)
+{
+    for (int bid = 0; bid < (int)zone->contained_buildings.size(); bid++)
+    {
+        if (zone->contained_buildings[bid] == bld)
+        {
+            zone->contained_buildings.erase(zone->contained_buildings.begin() + bid);
+            bid--;
+        }
+    }
+
+    for (int bid = 0; bid < (int)bld->relations.size(); bid++)
+    {
+        if (bld->relations[bid] == zone)
+        {
+            bld->relations.erase(bld->relations.begin() + bid);
+            bid--;
+        }
+    }
+}
+
+static void remove_building_from_all_zones(df::building* bld)
+{
+    df::coord coord(bld->centerx, bld->centery, bld->z);
+
+    std::vector<df::building_civzonest*> cv;
+    Buildings::findCivzonesAt(&cv, coord);
+
+    for (size_t i=0; i < cv.size(); i++)
+    {
+        remove_building_from_zone(bld, cv[i]);
+    }
+}
+
 bool Buildings::constructAbstract(df::building *bld)
 {
     CHECK_NULL_POINTER(bld);
@@ -1155,7 +1189,32 @@ bool Buildings::constructAbstract(df::building *bld)
             {
                 zone->zone_num = getMaxCivzoneId() + 1;
 
-                add_zone_to_all_buildings(zone);
+                auto &vec = df::building::get_vector();
+
+                for (size_t i = 0; i < vec.size(); i++)
+                {
+                    auto against = vec[i];
+
+                    if (bld->z != against->z)
+                        continue;
+
+                    if (!is_suitable_building_for_zoning(against))
+                        continue;
+
+                    int32_t cx = against->centerx;
+                    int32_t cy = against->centery;
+
+                    df::coord2d coord(cx, cy);
+
+                    if (bld->room.extents && bld->isExtentShaped())
+                    {
+                        auto etile = getExtentTile(bld->room, coord);
+                        if (!etile || !*etile)
+                            continue;
+                    }
+
+                    add_building_to_zone(against, zone);
+                }
             }
             break;
 
@@ -1444,16 +1503,6 @@ bool Buildings::markedForRemoval(df::building *bld)
         }
     }
     return false;
-}
-
-void Buildings::notifyCivzoneModified(df::building* bld)
-{
-    if (bld->getType() != building_type::Civzone)
-        return;
-
-    //remove zone here needs to be the slow method
-    remove_zone_from_all_buildings(bld);
-    add_zone_to_all_buildings(bld);
 }
 
 void Buildings::clearBuildings(color_ostream& out) {

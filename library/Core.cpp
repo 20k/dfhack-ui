@@ -1947,8 +1947,9 @@ int Core::Update()
 extern bool buildings_do_onupdate;
 void buildings_onStateChange(color_ostream &out, state_change_event event);
 void buildings_onUpdate(color_ostream &out);
+void buildings_zoneWatch(uint32_t frame);
 
-static int buildings_timer = 0;
+static uint32_t buildings_timer = 0;
 
 void Core::onUpdate(color_ostream &out)
 {
@@ -1957,6 +1958,8 @@ void Core::onUpdate(color_ostream &out)
     // convert building reagents
     if (buildings_do_onupdate && (++buildings_timer & 1))
         buildings_onUpdate(out);
+
+    buildings_zoneWatch(buildings_timer);
 
     // notify all the plugins that a game tick is finished
     plug_mgr->OnUpdate(out);

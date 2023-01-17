@@ -1961,7 +1961,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
 
     df::squad* result = new df::squad();
     result->id = *df::global::squad_next_id;
-    result->cur_alert_idx = 0;
+    result->cur_routine_idx = -1;
     result->uniform_priority = result->id + 1; //no idea why, but seems to hold
     result->activity = -1; //??
     result->carry_food = 2;
@@ -1985,13 +1985,14 @@ df::squad* Units::makeSquad(int32_t assignment_id)
         result->positions.push_back(pos);
     }
 
-    const auto& alerts = df::global::plotinfo->alerts;
+    /*const auto& alerts = df::global::plotinfo->alerts;
 
     //hideous memory allocation function, schedule is initialised as the current number
     //of alerts
     //when alerts are added and removed the .schedule vector is resized, so there's a
     //1:1 correspondance. I have a sneaking suspicion that there only used to be
     //one global schedule entry table, which is why this is all so convoluted
+    //todo: in 50.xx, cur_alert_idx refers to squad orders
     for(int i=0; i < (int)alerts.list.size(); i++)
     {
         //unused
@@ -2038,7 +2039,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
         }
 
         result->schedule.push_back(reinterpret_cast<df::squad::T_schedule*>(asched));
-    }
+    }*/
 
     //all we've done so far is leak memory if anything goes wrong
     //modify state

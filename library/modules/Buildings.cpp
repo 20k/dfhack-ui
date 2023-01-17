@@ -413,6 +413,23 @@ bool Buildings::findCivzonesAt(std::vector<df::building_civzonest*> *pvec,
                                df::coord pos) {
     pvec->clear();
 
+    for (df::building_civzonest* zone : world->buildings.other.ACTIVITY_ZONE)
+    {
+        if (pos.z != zone->z)
+            continue;
+
+        if (zone->room.extents && zone->isExtentShaped())
+        {
+            auto etile = getExtentTile(zone->room, pos);
+            if (!etile || !*etile)
+                continue;
+
+            pvec->push_back(zone);
+        }
+    }
+
+    return !pvec->empty();
+
     // Tiles have an occupancy->bits.building flag to quickly determine if it is
     // covered by a buildling, but there is no such flag for civzones.
     // Therefore, we need to make sure that our cache is authoratative.
@@ -424,7 +441,7 @@ bool Buildings::findCivzonesAt(std::vector<df::building_civzonest*> *pvec,
     // the cache, there is no civzone there. Civzones *can* be dynamically
     // shrunk, so we still need to verify that civzones that once covered this
     // tile continue to cover this tile.
-    cacheNewCivzones();
+    /*cacheNewCivzones();
 
     auto civzones_it = locationToCivzones.find(pos);
     if (civzones_it == locationToCivzones.end())
@@ -459,7 +476,7 @@ bool Buildings::findCivzonesAt(std::vector<df::building_civzonest*> *pvec,
             locationToCivzones.erase(pos);
     }
 
-    return !pvec->empty();
+    return !pvec->empty();*/
 }
 
 df::building *Buildings::allocInstance(df::coord pos, df::building_type type, int subtype, int custom)

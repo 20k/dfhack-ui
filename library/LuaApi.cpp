@@ -2206,6 +2206,29 @@ static void imgui_feedupwards()
     ImTuiInterop::viewscreen::feed_upwards();
 }
 
+static void debug_hook()
+{
+    /*for(int kk=0; kk < (int)df::global::plotinfo->alerts.routines.size(); kk++)
+    {
+        printf("Checking %i\n", kk);
+
+        int val = _msize(df::global::plotinfo->alerts.routines[kk]);
+
+        printf("%li size\n", val);
+        fflush(stdout);
+
+        char* ptr = (char*)df::global::plotinfo->alerts.routines[kk];
+
+        for (int i=0; i < val; i++)
+        {
+            printf("%#02x ", ptr[i]);
+        }
+
+        printf("\n");
+        fflush(stdout);
+    }*/
+}
+
 static const LuaWrapper::FunctionReg dfhack_imgui_module[] = {
     WRAPM(ImGui, End),
     WRAPM(ImGui, BeginTooltip),
@@ -2261,6 +2284,7 @@ static const LuaWrapper::FunctionReg dfhack_imgui_module[] = {
     WRAPM(ImGui, GetWindowWidth),
     WRAPM(ImGui, GetWindowHeight),
     WRAPM(ImGui, SetNextWindowFocus),
+    WRAPN(debug_hook, debug_hook),
     { NULL, NULL }
 };
 

@@ -1961,7 +1961,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
 
     df::squad* result = new df::squad();
     result->id = *df::global::squad_next_id;
-    result->cur_routine_idx = -1;
+    //result->cur_routine_idx = -1;
     result->uniform_priority = result->id + 1; //no idea why, but seems to hold
     result->activity = -1; //??
     result->carry_food = 2;

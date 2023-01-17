@@ -102,7 +102,6 @@ struct CoordHash {
 };
 
 static unordered_map<df::coord, int32_t, CoordHash> locationToBuilding;
-static unordered_map<df::coord, vector<int32_t>, CoordHash> locationToCivzones;
 
 static df::building_extents_type *getExtentTile(df::building_extents &extent, df::coord2d tile)
 {
@@ -385,28 +384,11 @@ static void cacheBuilding(df::building *building, bool is_civzone) {
         for (int32_t y = p1.y; y <= p2.y; y++) {
             df::coord pt(x, y, building->z);
             if (Buildings::containsTile(building, pt, is_civzone)) {
-                if (is_civzone)
-                    locationToCivzones[pt].push_back(id);
-                else
+                if (!is_civzone)
                     locationToBuilding[pt] = id;
             }
         }
     }
-}
-
-static int32_t nextCivzone = 0;
-static void cacheNewCivzones() {
-    if (!world || !building_next_id)
-        return;
-
-    int32_t nextBuildingId = *building_next_id;
-    for (int32_t id = nextCivzone; id < nextBuildingId; ++id) {
-        auto &vec = world->buildings.other[buildings_other_id::ANY_ZONE];
-        int32_t idx = df::building::binsearch_index(vec, id);
-        if (idx > -1)
-            cacheBuilding(vec[idx], true);
-    }
-    nextCivzone = nextBuildingId;
 }
 
 bool Buildings::findCivzonesAt(std::vector<df::building_civzonest*> *pvec,
@@ -1403,8 +1385,6 @@ void Buildings::clearBuildings(color_ostream& out) {
     corner1.clear();
     corner2.clear();
     locationToBuilding.clear();
-    locationToCivzones.clear();
-    nextCivzone = 0;
 }
 
 void Buildings::updateBuildings(color_ostream&, void* ptr)

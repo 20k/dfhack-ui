@@ -429,54 +429,6 @@ bool Buildings::findCivzonesAt(std::vector<df::building_civzonest*> *pvec,
     }
 
     return !pvec->empty();
-
-    // Tiles have an occupancy->bits.building flag to quickly determine if it is
-    // covered by a buildling, but there is no such flag for civzones.
-    // Therefore, we need to make sure that our cache is authoratative.
-    // Otherwise, we would have to fall back to linearly scanning the list of
-    // all civzones on a cache miss.
-    //
-    // Since we guarantee our cache contains *at least* all tiles that are
-    // currently covered by civzones, we can conclude that if a tile is not in
-    // the cache, there is no civzone there. Civzones *can* be dynamically
-    // shrunk, so we still need to verify that civzones that once covered this
-    // tile continue to cover this tile.
-    /*cacheNewCivzones();
-
-    auto civzones_it = locationToCivzones.find(pos);
-    if (civzones_it == locationToCivzones.end())
-        return false;
-
-    set<int32_t> ids_to_remove;
-    auto &civzones = civzones_it->second;
-    for (int32_t id : civzones) {
-        int32_t idx = df::building::binsearch_index(
-                world->buildings.other[buildings_other_id::ANY_ZONE], id);
-        df::building_civzonest *civzone = NULL;
-        if (idx > -1)
-            civzone = world->buildings.other.ANY_ZONE[idx];
-        if (!civzone || civzone->z != pos.z ||
-                !containsTile(civzone, pos, true)) {
-            ids_to_remove.insert(id);
-            continue;
-        }
-        pvec->push_back(civzone);
-    }
-
-    // civzone no longer occupies this tile; update the cache
-    if (!ids_to_remove.empty()) {
-        for (auto it = civzones.begin(); it != civzones.end(); ) {
-            if (ids_to_remove.count(*it)) {
-                it = civzones.erase(it);
-                continue;
-            }
-            ++it;
-        }
-        if (civzones.empty())
-            locationToCivzones.erase(pos);
-    }
-
-    return !pvec->empty();*/
 }
 
 df::building *Buildings::allocInstance(df::coord pos, df::building_type type, int subtype, int custom)

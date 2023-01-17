@@ -211,6 +211,9 @@ static void add_building_to_all_zones(df::building* bld)
 //so if they're added to a zone, the zone has a pointer to a deleted building if eg the item doesn't exist
 //however they also don't ever get added to a zone when they're installed, rendering them unusable for zones
 //this watcher assigns only *fully* constructed buildings to zones
+//so, ok on reflection only manually placed buildings need to do this
+//so keep a list of manually constructed things, and once they're fully constructed, do a trigger
+//essentially, and then to zones, and then forget about them forever
 void buildings_zoneWatch(uint32_t frame)
 {
     auto& vec = df::building::get_vector();

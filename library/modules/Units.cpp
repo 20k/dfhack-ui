@@ -2006,6 +2006,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
     result->carry_food = 2;
     result->carry_water = 1;
     result->entity_id = df::global::plotinfo->group_id;
+    //leader_position and leader_assignment are unused in 50.05
     result->leader_position = corresponding_position->id;
     result->leader_assignment = found_assignment->id;
     result->unk_1 = -1;

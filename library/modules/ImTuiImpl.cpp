@@ -382,8 +382,12 @@ void impl::init_current_context()
     style.Colors[ImGuiCol_ResizeGripHovered] = named_colours("WHITE", "BLACK", false); //?
     style.Colors[ImGuiCol_ResizeGripActive] = named_colours("WHITE", "BLACK", false); //?
 
+    style.Colors[ImGuiCol_TableHeaderBg] = named_colours("BLACK", "BLACK", false);
     style.Colors[ImGuiCol_TableBorderStrong] = named_colours("WHITE", "WHITE", false);
     style.Colors[ImGuiCol_TableBorderLight] = named_colours("WHITE", "WHITE", false);
+
+    style.Colors[ImGuiCol_TableRowBg] = named_colours("BLACK", "BLACK", false);
+    style.Colors[ImGuiCol_TableRowBgAlt] = named_colours("BLACK", "DARKGREY", false);
 
     //good for debugging
     //style.Colors[ImGuiCol_NavHighlight] = named_colours("WHITE", "YELLOW", false);
@@ -398,6 +402,20 @@ void impl::init_current_context()
     style.Colors[ImGuiCol_ScrollbarGrab] = named_colours("GREY", "GREY", false);
     style.Colors[ImGuiCol_ScrollbarGrabHovered] = named_colours("WHITE", "WHITE", false);
     style.Colors[ImGuiCol_ScrollbarGrabActive] = named_colours("WHITE", "WHITE", false);
+
+    style.Colors[ImGuiCol_WindowBg] = named_colours("BLACK", "BLACK", false);
+    style.Colors[ImGuiCol_ChildBg] = named_colours("BLACK", "BLACK", false);
+    style.Colors[ImGuiCol_PopupBg] = named_colours("BLACK", "BLACK", false);
+
+    style.Colors[ImGuiCol_FrameBg] = named_colours("BLACK", "BLACK", false);
+    style.Colors[ImGuiCol_FrameBgHovered] = named_colours("BLACK", "RED", false);
+    style.Colors[ImGuiCol_FrameBgActive] = named_colours("BLACK", "GREEN", false);
+
+    style.Colors[ImGuiCol_Tab] = named_colours("BLACK", "BLACK", false);
+    style.Colors[ImGuiCol_TabHovered] = named_colours("BLACK", "RED", false);
+    style.Colors[ImGuiCol_TabActive] = named_colours("BLACK", "BLUE", false);
+    style.Colors[ImGuiCol_TabUnfocused] = named_colours("BLACK", "BLACK", false);
+    style.Colors[ImGuiCol_TabUnfocusedActive] = named_colours("BLACK", "BLACK", false);
 
     ImFontConfig fontConfig;
     fontConfig.GlyphMinAdvanceX = 1.0f;

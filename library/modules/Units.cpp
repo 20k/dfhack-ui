@@ -33,6 +33,7 @@ distribution.
 #include <algorithm>
 #include <numeric>
 #include <functional>
+#include <array>
 using namespace std;
 
 #include "VersionInfo.h"
@@ -1961,7 +1962,7 @@ df::squad* Units::makeSquad(int32_t assignment_id)
 
     df::squad* result = new df::squad();
     result->id = *df::global::squad_next_id;
-    //result->cur_routine_idx = -1;
+    result->cur_routine_idx = 0;
     result->uniform_priority = result->id + 1; //no idea why, but seems to hold
     result->activity = -1; //??
     result->carry_food = 2;
@@ -1985,61 +1986,113 @@ df::squad* Units::makeSquad(int32_t assignment_id)
         result->positions.push_back(pos);
     }
 
-    /*const auto& alerts = df::global::plotinfo->alerts;
+    const auto& routines = df::global::plotinfo->alerts.routines;
 
-    //hideous memory allocation function, schedule is initialised as the current number
-    //of alerts
-    //when alerts are added and removed the .schedule vector is resized, so there's a
-    //1:1 correspondance. I have a sneaking suspicion that there only used to be
-    //one global schedule entry table, which is why this is all so convoluted
-    //todo: in 50.xx, cur_alert_idx refers to squad orders
-    for(int i=0; i < (int)alerts.list.size(); i++)
+    for (const auto& routine : routines)
     {
-        //unused
-        //df::ui::T_alerts::T_list* current_alert = alerts.list[i];
-
-        //hmm
         df::squad_schedule_entry* asched = (df::squad_schedule_entry*)malloc(sizeof(df::squad_schedule_entry) * 12);
 
         for(int kk=0; kk < 12; kk++)
         {
             new (&asched[kk]) df::squad_schedule_entry;
+
+            for(int jj=0; jj < squad_size; jj++)
+            {
+                int32_t* order_assignments = new int32_t();
+                *order_assignments = -1;
+
+                asched[kk].order_assignments.push_back(order_assignments);
+            }
         }
 
-        if (i == result->cur_alert_idx)
+        auto insert_training_order = [asched, squad_size](int month)
         {
-            for(int s=0; s < 12; s++)
+            df::squad_schedule_order* order = new df::squad_schedule_order();
+            order->min_count = squad_size;
+            //assumed
+            order->positions.resize(squad_size);
+
+            df::squad_order* s_order = df::allocate<df::squad_order_trainst>();
+
+            s_order->unk_v40_1 = -1;
+            s_order->unk_v40_2 = -1;
+            s_order->year = *df::global::cur_year;
+            s_order->year_tick = *df::global::cur_year_tick;
+            s_order->unk_v40_3 = -1;
+            s_order->unk_1 = 0;
+
+            order->order = s_order;
+
+            asched[month].orders.push_back(order);
+            //wear uniform while training
+            asched[month].uniform_mode = 0;
+        };
+
+        //I thought this was a terrible hack, but its literally how dwarf fortress does it 1:1
+        //Off duty: No orders, Sleep/room at will. Equip/orders only
+        if (routine->name == "Off duty")
+        {
+            for (int i=0; i < 12; i++)
             {
-                //not 100% sure that the size is always squad_size, but testing showed it as 10
-                for(int kk=0; kk < squad_size; kk++)
-                {
-                    int32_t* order_assignments = new int32_t();
-                    *order_assignments = -1;
+                asched[i].sleep_mode = 0;
+                asched[i].uniform_mode = 1;
+            }
+        }
+        //Staggered Training: Training orders at 3 4 5, 9 10 11, sleep/room at will. Equip/orders only, except train months which are equip/always
+        //always seen the training indices 0 1 2 6 7 8, so its unclear. Check if squad id matters
+        else if (routine->name == "Staggered training")
+        {
+            //this is semi randomised for different squads
+            //appears to be something like squad.id & 1, it isn't smart
+            //if you alternate squad creation, its 'correctly' staggered
+            //but it'll also happily not stagger them if you eg delete a squad and make another
+            std::array<int, 6> indices;
 
-                    asched[s].order_assignments.push_back(order_assignments);
-                }
+            if ((*df::global::squad_next_id) & 1)
+            {
+                indices = {3, 4, 5, 9, 10, 11};
+            }
+            else
+            {
+                indices = {0, 1, 2, 6, 7, 8};
+            }
 
-                df::squad_schedule_order* order = new df::squad_schedule_order();
-                order->min_count = 10;
-                order->positions.resize(10);
-
-                df::squad_order* s_order = df::allocate<df::squad_order_trainst>();
-
-                s_order->unk_v40_1 = -1;
-                s_order->unk_v40_2 = -1;
-                s_order->year = *df::global::cur_year;
-                s_order->year_tick = *df::global::cur_year_tick;
-                s_order->unk_v40_3 = -1;
-                s_order->unk_1 = 0;
-
-                order->order = s_order;
-
-                asched[s].orders.push_back(order);
+            for (int index : indices)
+            {
+                insert_training_order(index);
+                //still sleep in room at will even when training
+                asched[index].sleep_mode = 0;
+            }
+        }
+        //see above, but with all indices
+        else if (routine->name == "Constant training")
+        {
+            for (int i=0; i < 12; i++)
+            {
+                insert_training_order(i);
+                //still sleep in room at will even when training
+                asched[i].sleep_mode = 0;
+            }
+        }
+        else if (routine->name == "Ready")
+        {
+            for (int i=0; i < 12; i++)
+            {
+                asched[i].sleep_mode = 2;
+                asched[i].uniform_mode = 0;
+            }
+        }
+        else
+        {
+            for (int i=0; i < 12; i++)
+            {
+                asched[i].sleep_mode = 0;
+                asched[i].uniform_mode = 0;
             }
         }
 
         result->schedule.push_back(reinterpret_cast<df::squad::T_schedule*>(asched));
-    }*/
+    }
 
     //all we've done so far is leak memory if anything goes wrong
     //modify state

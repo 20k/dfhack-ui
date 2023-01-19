@@ -119,7 +119,7 @@ void add_building_to_all_zones(df::building* bld);
 
 static void buildings_fixzones()
 {
-    auto &vec = world->buildings.other[buildings_other_id::IN_PLAY];
+    auto& vec = world->buildings.other[buildings_other_id::IN_PLAY];
 
     bool changed = false;
 
@@ -939,8 +939,6 @@ bool Buildings::setSize(df::building *bld, df::coord2d size, int direction)
     CHECK_NULL_POINTER(bld);
     CHECK_INVALID_ARGUMENT(bld->id == -1);
 
-    remove_building_from_all_zones(bld);
-
     // Compute correct size and apply it
     df::coord2d old_size = size;
     df::coord2d center;
@@ -1005,9 +1003,6 @@ bool Buildings::setSize(df::building *bld, df::coord2d size, int direction)
 
     if (type != Construction)
         bld->setMaterialAmount(computeMaterialAmount(bld));
-
-    add_building_to_all_zones(bld);
-    add_zone_to_all_buildings(bld);
 
     return ok;
 }

@@ -166,11 +166,8 @@ void buildings_onUpdate(color_ostream &out)
     }
 }
 
-static void add_building_to_zone(df::building* bld, df::building_civzonest* zone)
+static void building_into_zone_unidir(df::building* bld, df::building_civzonest* zone)
 {
-    if (!bld->canBeRoom())
-        return;
-
     for (size_t bid = 0; bid < zone->contained_buildings.size(); bid++)
     {
         if (zone->contained_buildings[bid] == bld)
@@ -178,15 +175,41 @@ static void add_building_to_zone(df::building* bld, df::building_civzonest* zone
     }
 
     zone->contained_buildings.push_back(bld);
+
+    std::sort(zone->contained_buildings.begin(), zone->contained_buildings.end(), [](df::building* b1, df::building* b2)
+    {
+        return b1->id < b2->id;
+    });
+}
+
+static void zone_into_building_unidir(df::building* bld, df::building_civzonest* zone)
+{
+    for (size_t bid = 0; bid < bld->relations.size(); bid++)
+    {
+        if (bld->relations[bid] == zone)
+            return;
+    }
+
+    bld->relations.push_back(zone);
+
+    std::sort(bld->relations.begin(), bld->relations.end(), [](df::building* b1, df::building* b2)
+    {
+        return b1->id < b2->id;
+    });
+}
+
+static void add_building_to_zone(df::building* bld, df::building_civzonest* zone)
+{
+    if (!bld->canBeRoom())
+        return;
+
+    building_into_zone_unidir(bld, zone);
+    zone_into_building_unidir(bld, zone);
 }
 
 static bool is_suitable_building_for_zoning(df::building* bld)
 {
-    if (!bld->canBeRoom())
-        return false;
-
-    //purely a workaround for the filter-zone-crash issue
-    return bld->isActual() && bld->getBuildStage() > 0;
+    return bld->canBeRoom();
 }
 
 static void add_building_to_all_zones(df::building* bld)
@@ -202,30 +225,6 @@ static void add_building_to_all_zones(df::building* bld)
     for (size_t i=0; i < cv.size(); i++)
     {
         add_building_to_zone(bld, cv[i]);
-    }
-}
-
-//<angry 20k noises>
-//the basic issue is that buildings constructed via filters don't get cleaned up correctly from a zone
-//if the queued job gets cancelled for some reason
-//so if they're added to a zone, the zone has a pointer to a deleted building if eg the item doesn't exist
-//however they also don't ever get added to a zone when they're installed, rendering them unusable for zones
-//this watcher assigns only *fully* constructed buildings to zones
-//so, ok on reflection only manually placed buildings need to do this
-//so keep a list of manually constructed things, and once they're fully constructed, do a trigger
-//essentially, and then to zones, and then forget about them forever
-void buildings_zoneWatch(uint32_t frame)
-{
-    auto& vec = df::building::get_vector();
-
-    //todo: as we're doing this, every time we hit a fresh civzone, build a <set> of buildings in a zone
-    //so that it is amortised O(log(n)) lookup, rather than O(n)
-    for (df::building* bld : vec)
-    {
-        if (is_suitable_building_for_zoning(bld))
-        {
-            add_building_to_all_zones(bld);
-        }
     }
 }
 
@@ -1092,12 +1091,19 @@ static void remove_building_from_zone(df::building* bld, df::building_civzonest*
             bid--;
         }
     }
+
+    for (int bid = 0; bid < (int)bld->relations.size(); bid++)
+    {
+        if (bld->relations[bid] == zone)
+        {
+            bld->relations.erase(bld->relations.begin() + bid);
+            bid--;
+        }
+    }
 }
 
 static void remove_building_from_all_zones(df::building* bld)
 {
-    //if !bld->canberoom?
-
     df::coord coord(bld->centerx, bld->centery, bld->z);
 
     std::vector<df::building_civzonest*> cv;
@@ -1155,7 +1161,7 @@ bool Buildings::constructAbstract(df::building *bld)
                             continue;
                     }
 
-                    zone->contained_buildings.push_back(against);
+                    add_building_to_zone(against, zone);
                 }
             }
             break;
@@ -1252,8 +1258,7 @@ bool Buildings::constructWithItems(df::building *bld, std::vector<df::item*> ite
             bld->mat_index = items[i]->getMaterialIndex();
     }
 
-    //this technically could happen as the game seems to deal with this correctly, but keeping parity with constructWithFilters
-    //add_building_to_all_zones(bld);
+    add_building_to_all_zones(bld);
 
     createDesign(bld, rough);
     return true;
@@ -1301,7 +1306,7 @@ bool Buildings::constructWithFilters(df::building *bld, std::vector<df::job_item
 
     buildings_do_onupdate = true;
 
-    //add_building_to_all_zones(bld);
+    add_building_to_all_zones(bld);
 
     createDesign(bld, rough);
     return true;

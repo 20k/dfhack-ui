@@ -115,18 +115,36 @@ static df::building_extents_type *getExtentTile(df::building_extents &extent, df
     return &extent.extents[dx + dy*extent.width];
 }
 
+void add_building_to_all_zones(df::building* bld);
+
+static void buildings_fixzones()
+{
+    auto &vec = world->buildings.other[buildings_other_id::IN_PLAY];
+
+    bool changed = false;
+
+    for (size_t i = 0; i < vec.size(); i++)
+    {
+        df::building* bld = vec[i];
+
+        add_building_to_all_zones(bld);
+    }
+}
+
 /*
  * A monitor to work around this bug, in its application to buildings:
  *
  * http://www.bay12games.com/dwarves/mantisbt/view.php?id=1416
  */
 bool buildings_do_onupdate = false;
+static bool buildings_do_fixzones = false;
 
 void buildings_onStateChange(color_ostream &out, state_change_event event)
 {
     switch (event) {
     case SC_MAP_LOADED:
         buildings_do_onupdate = true;
+        buildings_do_fixzones = true;
         break;
     case SC_MAP_UNLOADED:
         buildings_do_onupdate = false;
@@ -138,6 +156,12 @@ void buildings_onStateChange(color_ostream &out, state_change_event event)
 
 void buildings_onUpdate(color_ostream &out)
 {
+    if (buildings_do_fixzones)
+    {
+        buildings_fixzones();
+        buildings_do_fixzones = false;
+    }
+
     buildings_do_onupdate = false;
 
     df::job_list_link *link = world->jobs.list.next;
@@ -915,6 +939,8 @@ bool Buildings::setSize(df::building *bld, df::coord2d size, int direction)
     CHECK_NULL_POINTER(bld);
     CHECK_INVALID_ARGUMENT(bld->id == -1);
 
+    remove_building_from_all_zones(bld);
+
     // Compute correct size and apply it
     df::coord2d old_size = size;
     df::coord2d center;
@@ -979,6 +1005,9 @@ bool Buildings::setSize(df::building *bld, df::coord2d size, int direction)
 
     if (type != Construction)
         bld->setMaterialAmount(computeMaterialAmount(bld));
+
+    add_building_to_all_zones(bld);
+    add_zone_to_all_buildings(bld);
 
     return ok;
 }
@@ -1133,40 +1162,6 @@ static int getMaxCivzoneId()
     return max_id;
 }
 
-static void remove_building_from_zone(df::building* bld, df::building_civzonest* zone)
-{
-    for (int bid = 0; bid < (int)zone->contained_buildings.size(); bid++)
-    {
-        if (zone->contained_buildings[bid] == bld)
-        {
-            zone->contained_buildings.erase(zone->contained_buildings.begin() + bid);
-            bid--;
-        }
-    }
-
-    for (int bid = 0; bid < (int)bld->relations.size(); bid++)
-    {
-        if (bld->relations[bid] == zone)
-        {
-            bld->relations.erase(bld->relations.begin() + bid);
-            bid--;
-        }
-    }
-}
-
-static void remove_building_from_all_zones(df::building* bld)
-{
-    df::coord coord(bld->centerx, bld->centery, bld->z);
-
-    std::vector<df::building_civzonest*> cv;
-    Buildings::findCivzonesAt(&cv, coord);
-
-    for (size_t i=0; i < cv.size(); i++)
-    {
-        remove_building_from_zone(bld, cv[i]);
-    }
-}
-
 bool Buildings::constructAbstract(df::building *bld)
 {
     CHECK_NULL_POINTER(bld);
@@ -1189,32 +1184,7 @@ bool Buildings::constructAbstract(df::building *bld)
             {
                 zone->zone_num = getMaxCivzoneId() + 1;
 
-                auto &vec = df::building::get_vector();
-
-                for (size_t i = 0; i < vec.size(); i++)
-                {
-                    auto against = vec[i];
-
-                    if (bld->z != against->z)
-                        continue;
-
-                    if (!is_suitable_building_for_zoning(against))
-                        continue;
-
-                    int32_t cx = against->centerx;
-                    int32_t cy = against->centery;
-
-                    df::coord2d coord(cx, cy);
-
-                    if (bld->room.extents && bld->isExtentShaped())
-                    {
-                        auto etile = getExtentTile(bld->room, coord);
-                        if (!etile || !*etile)
-                            continue;
-                    }
-
-                    add_building_to_zone(against, zone);
-                }
+                add_zone_to_all_buildings(zone);
             }
             break;
 
@@ -1458,6 +1428,7 @@ bool Buildings::deconstruct(df::building *bld)
     bld->uncategorize();
 
     remove_building_from_all_zones(bld);
+    remove_zone_from_all_buildings(bld);
 
     if (bld->getType() == df::building_type::Civzone)
     {

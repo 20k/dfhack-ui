@@ -119,6 +119,11 @@ void add_building_to_all_zones(df::building* bld);
 
 static void buildings_fixzones()
 {
+    for (df::building_civzonest* zone : world->buildings.other.ACTIVITY_ZONE)
+    {
+        zone->contained_buildings.clear();
+    }
+
     auto& vec = world->buildings.other[buildings_other_id::IN_PLAY];
 
     bool changed = false;
@@ -126,6 +131,7 @@ static void buildings_fixzones()
     for (size_t i = 0; i < vec.size(); i++)
     {
         df::building* bld = vec[i];
+        bld->relations.clear();
 
         add_building_to_all_zones(bld);
     }
@@ -1469,6 +1475,16 @@ bool Buildings::markedForRemoval(df::building *bld)
         }
     }
     return false;
+}
+
+void Buildings::notifyCivzoneModified(df::building* bld)
+{
+    if (bld->getType() != building_type::Civzone)
+        return;
+
+    //remove zone here needs to be the slow method
+    remove_zone_from_all_buildings(bld);
+    add_zone_to_all_buildings(bld);
 }
 
 void Buildings::clearBuildings(color_ostream& out) {

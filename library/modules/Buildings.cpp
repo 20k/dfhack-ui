@@ -115,42 +115,18 @@ static df::building_extents_type *getExtentTile(df::building_extents &extent, df
     return &extent.extents[dx + dy*extent.width];
 }
 
-void add_building_to_all_zones(df::building* bld);
-
-static void buildings_fixzones()
-{
-    for (df::building_civzonest* zone : world->buildings.other.ACTIVITY_ZONE)
-    {
-        zone->contained_buildings.clear();
-    }
-
-    auto& vec = world->buildings.other[buildings_other_id::IN_PLAY];
-
-    bool changed = false;
-
-    for (size_t i = 0; i < vec.size(); i++)
-    {
-        df::building* bld = vec[i];
-        bld->relations.clear();
-
-        add_building_to_all_zones(bld);
-    }
-}
-
 /*
  * A monitor to work around this bug, in its application to buildings:
  *
  * http://www.bay12games.com/dwarves/mantisbt/view.php?id=1416
  */
 bool buildings_do_onupdate = false;
-static bool buildings_do_fixzones = false;
 
 void buildings_onStateChange(color_ostream &out, state_change_event event)
 {
     switch (event) {
     case SC_MAP_LOADED:
         buildings_do_onupdate = true;
-        buildings_do_fixzones = true;
         break;
     case SC_MAP_UNLOADED:
         buildings_do_onupdate = false;
@@ -162,12 +138,6 @@ void buildings_onStateChange(color_ostream &out, state_change_event event)
 
 void buildings_onUpdate(color_ostream &out)
 {
-    if (buildings_do_fixzones)
-    {
-        buildings_fixzones();
-        buildings_do_fixzones = false;
-    }
-
     buildings_do_onupdate = false;
 
     df::job_list_link *link = world->jobs.list.next;

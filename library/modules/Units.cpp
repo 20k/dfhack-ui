@@ -52,6 +52,7 @@ using namespace std;
 #include "MiscUtils.h"
 
 #include "df/activity_entry.h"
+#include "df/building_civzonest.h"
 #include "df/burrow.h"
 #include "df/caste_raw.h"
 #include "df/creature_raw.h"
@@ -2147,6 +2148,55 @@ df::squad* Units::makeSquad(int32_t assignment_id)
     //todo: find and modify old squad
 
     return result;
+}
+
+void Units::updateRoomAssignments(int32_t squad_id, int32_t civzone_id, df::squad_use_flags flags)
+{
+    df::squad* squad = df::squad::find(squad_id);
+    df::building* bzone = df::building::find(civzone_id);
+
+    df::building_civzonest* zone = strict_virtual_cast<df::building_civzonest>(bzone);
+
+    if (squad == nullptr || zone == nullptr)
+        return;
+
+    df::squad::T_rooms* room_from_squad = nullptr;
+    df::building_civzonest::T_squad_room_info* room_from_building = nullptr;
+
+    for (auto room : squad->rooms)
+    {
+        if (room->building_id == civzone_id)
+        {
+            room_from_squad = room;
+            break;
+        }
+    }
+
+    for (auto room : zone->squad_room_info)
+    {
+        if (room->squad_id == squad_id)
+        {
+            room_from_building = room;
+            break;
+        }
+    }
+
+    if (room_from_squad == nullptr)
+    {
+        room_from_squad = new df::squad::T_rooms();
+        room_from_squad->building_id = civzone_id;
+        squad->rooms.push_back(room_from_squad);
+    }
+
+    if (room_from_building == nullptr)
+    {
+        room_from_building = new df::building_civzonest::T_squad_room_info();
+        room_from_building->squad_id = squad_id;
+        zone->squad_room_info.push_back(room_from_building);
+    }
+
+    room_from_squad->mode = flags;
+    room_from_building->mode = flags;
 }
 
 df::activity_entry *Units::getMainSocialActivity(df::unit *unit)

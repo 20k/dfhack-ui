@@ -2193,7 +2193,7 @@ void Units::updateRoomAssignments(int32_t squad_id, int32_t civzone_id, df::squa
         room_from_squad->building_id = civzone_id;
         squad->rooms.push_back(room_from_squad);
 
-        std::sort(squad->rooms.begin(), squad->rooms.end(), [](auto a, auto b){return a->building_id < b->building_id;});
+        std::sort(squad->rooms.begin(), squad->rooms.end(), [](df::squad::T_rooms* a, df::squad::T_rooms* b){return a->building_id < b->building_id;});
     }
 
     if (room_from_building == nullptr)
@@ -2202,7 +2202,7 @@ void Units::updateRoomAssignments(int32_t squad_id, int32_t civzone_id, df::squa
         room_from_building->squad_id = squad_id;
         zone->squad_room_info.push_back(room_from_building);
 
-        std::sort(zone->squad_room_info.begin(), zone->squad_room_info.end(), [](auto a, auto b){return a->squad_id < b->squad_id;});
+        std::sort(zone->squad_room_info.begin(), zone->squad_room_info.end(), [](df::building_civzonest::T_squad_room_info* a, df::building_civzonest::T_squad_room_info* b){return a->squad_id < b->squad_id;});
     }
 
     if (room_from_squad)

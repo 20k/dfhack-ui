@@ -2140,6 +2140,8 @@ df::squad* Units::makeSquad(int32_t assignment_id)
     df::global::world->squads.all.push_back(result);
     found_assignment->squad_id = result->id;
 
+    //todo: find and modify old squad
+
     return result;
 }
 

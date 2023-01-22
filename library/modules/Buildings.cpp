@@ -1399,7 +1399,6 @@ bool Buildings::deconstruct(df::building *bld)
     bld->uncategorize();
 
     remove_building_from_all_zones(bld);
-    remove_zone_from_all_buildings(bld);
 
     if (bld->getType() == df::building_type::Civzone)
     {

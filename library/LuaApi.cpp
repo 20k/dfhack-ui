@@ -1414,6 +1414,21 @@ static std::string utf2df(std::string s) { return UTF2DF(s); }
 static std::string df2console(color_ostream &out, std::string s) { return DF2CONSOLE(out, s); }
 static std::string toSearchNormalized(std::string s) { return to_search_normalized(s); }
 
+static int msize(void* ptr)
+{
+    #ifdef _WIN32
+
+    //https://devblogs.microsoft.com/oldnewthing/20120316-00/?p=8083 for details
+    if (ptr)
+        return _msize(ptr);
+    else
+        return -1;
+
+    #else
+    return -1
+    #endif
+}
+
 #define WRAP_VERSION_FUNC(name, function) WRAPN(name, DFHack::Version::function)
 
 static const LuaWrapper::FunctionReg dfhack_module[] = {
@@ -1431,6 +1446,7 @@ static const LuaWrapper::FunctionReg dfhack_module[] = {
     WRAP(utf2df),
     WRAP(df2console),
     WRAP(toSearchNormalized),
+    WRAP(msize),
     WRAP_VERSION_FUNC(getDFHackVersion, dfhack_version),
     WRAP_VERSION_FUNC(getDFHackRelease, dfhack_release),
     WRAP_VERSION_FUNC(getDFHackBuildID, dfhack_build_id),

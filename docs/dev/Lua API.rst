@@ -614,6 +614,10 @@ Miscellaneous
   both from the curry call and the closure call itself. I.e.
   ``curry(func,a,b)(c,d)`` equals ``func(a,b,c,d)``.
 
+* ``dfhack.msize(ptr)``
+
+  Returns the allocation size of a pointer. Windows only
+
 
 Locking and finalization
 ------------------------

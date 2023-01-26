@@ -1414,89 +1414,6 @@ static std::string utf2df(std::string s) { return UTF2DF(s); }
 static std::string df2console(color_ostream &out, std::string s) { return DF2CONSOLE(out, s); }
 static std::string toSearchNormalized(std::string s) { return to_search_normalized(s); }
 
-static int msize(void* ptr)
-{
-    #ifdef _WIN32
-
-    //https://devblogs.microsoft.com/oldnewthing/20120316-00/?p=8083 for details
-    if (ptr)
-        return _msize(ptr);
-    else
-        return -1;
-
-    #else
-    return -1;
-    #endif
-}
-
-std::map<void*, uint64_t> snapshot;
-
-static void take_heap_snapshot()
-{
-    #ifdef _WIN32
-    snapshot.clear();
-
-    std::vector<std::pair<void*, int>> entries;
-
-    _HEAPINFO hinfo;
-    int heapstatus;
-    int numLoops;
-    hinfo._pentry = NULL;
-    numLoops = 0;
-    while((heapstatus = _heapwalk(&hinfo)) == _HEAPOK &&
-          numLoops < 1024*1024*1024)
-    {
-        if (hinfo._useflag == _USEDENTRY)
-        {
-            //snapshot[hinfo._pentry] = hinfo._size;
-
-            assert(numLoops <= entries.size());
-            entries.push_back({hinfo._pentry, hinfo._size});
-        }
-
-        numLoops++;
-    }
-
-    for (auto i : entries)
-    {
-        snapshot[i.first] = i.second;
-    }
-
-    #endif
-}
-
-static int query_heap(void* ptr)
-{
-    #ifdef _WIN32
-    auto it = snapshot.find(ptr);
-
-    if (it == snapshot.end())
-        return -1;
-
-    return it->second;
-    #endif
-
-    return -1;
-}
-
-
-static int query_heapa(uintptr_t ptr)
-{
-    #ifdef _WIN32
-    void* as_ptr = nullptr;
-    memcpy((void*)&as_ptr, &ptr, sizeof(uintptr_t));
-
-    auto it = snapshot.find(as_ptr);
-
-    if (it == snapshot.end())
-        return -1;
-
-    return it->second;
-    #endif
-
-    return -1;
-}
-
 #define WRAP_VERSION_FUNC(name, function) WRAPN(name, DFHack::Version::function)
 
 static const LuaWrapper::FunctionReg dfhack_module[] = {
@@ -1514,10 +1431,6 @@ static const LuaWrapper::FunctionReg dfhack_module[] = {
     WRAP(utf2df),
     WRAP(df2console),
     WRAP(toSearchNormalized),
-    WRAP(msize),
-    WRAP(take_heap_snapshot),
-    WRAP(query_heap),
-    WRAP(query_heapa),
     WRAP_VERSION_FUNC(getDFHackVersion, dfhack_version),
     WRAP_VERSION_FUNC(getDFHackRelease, dfhack_release),
     WRAP_VERSION_FUNC(getDFHackBuildID, dfhack_build_id),
@@ -4329,12 +4242,143 @@ static int8_t getModstate() { return Core::getInstance().getModstate(); }
 static std::string internal_strerror(int n) { return strerror(n); }
 static std::string internal_md5(std::string s) { return md5_wrap.getHashFromString(s); }
 
+struct heap_pointer_info
+{
+    size_t size = 0;
+    int status = 0;
+};
+
+std::map<void*, heap_pointer_info> snapshot;
+
+static int heap_take_snapshot()
+{
+    #ifdef _WIN32
+    snapshot.clear();
+
+    std::vector<std::pair<void*, heap_pointer_info>> entries;
+    //heap allocating while iterating the heap is suboptimal
+    entries.reserve(256*1024*1024);
+
+    _HEAPINFO hinfo;
+    int heapstatus;
+    int numLoops;
+    hinfo._pentry = NULL;
+    numLoops = 0;
+    while((heapstatus = _heapwalk(&hinfo)) == _HEAPOK &&
+          numLoops < 1024*1024*1024)
+    {
+        heap_pointer_info inf;
+        inf.size = hinfo._size;
+        inf.status = hinfo._useflag; //0 == _FREEENTRY, 1 == _USEDENTRY
+
+        entries.push_back({hinfo._pentry, inf});
+
+        numLoops++;
+    }
+
+    for (auto i : entries)
+    {
+        snapshot[i.first] = i.second;
+    }
+
+    if (heapstatus == _HEAPEMPTY || heapstatus == _HEAPEND)
+        return 0;
+
+    if (heapstatus == _HEAPBADPTR)
+        return 1;
+
+    if (heapstatus == _HEAPBADBEGIN)
+        return 2;
+
+    if (heapstatus == _HEAPBADNODE)
+        return 3;
+
+    #endif
+
+    return 0;
+}
+
+static void* address_to_pointer(uintptr_t ptr)
+{
+    void* as_ptr = nullptr;
+    memcpy((void*)&as_ptr, &ptr, sizeof(uintptr_t));
+
+    return as_ptr;
+}
+
+static bool is_address_in_heap(uintptr_t ptr)
+{
+    void* vptr = address_to_pointer(ptr);
+
+    return snapshot.find(vptr) != snapshot.end();
+}
+
+static bool is_address_active_in_heap(uintptr_t ptr)
+{
+    void* vptr = address_to_pointer(ptr);
+
+    auto it = snapshot.find(vptr);
+
+    if (it == snapshot.end())
+        return false;
+
+    return it->second.status == 1;
+}
+
+static bool is_address_used_after_free_in_heap(uintptr_t ptr)
+{
+    void* vptr = address_to_pointer(ptr);
+
+    auto it = snapshot.find(vptr);
+
+    if (it == snapshot.end())
+        return false;
+
+    return it->second.status != 1;
+}
+
+static int get_address_size_in_heap(uintptr_t ptr)
+{
+    void* vptr = address_to_pointer(ptr);
+
+    auto it = snapshot.find(vptr);
+
+    if (it == snapshot.end())
+        return -1;
+
+    return it->second.size;
+}
+
+//msize crashes if you pass an invalid pointer to it, only use it if you *know* the thing you're looking at
+//is in the heap/valid
+static int msize_address(uintptr_t ptr)
+{
+    #ifdef _WIN32
+    void* vptr = address_to_pointer(ptr);
+
+    //https://devblogs.microsoft.com/oldnewthing/20120316-00/?p=8083 for details
+    if (vptr)
+        return _msize(vptr);
+    else
+        return -1;
+
+    #else
+    return -1;
+    #endif
+}
+
 static const LuaWrapper::FunctionReg dfhack_internal_module[] = {
     WRAP(getImageBase),
     WRAP(getRebaseDelta),
     WRAP(getModstate),
     WRAPN(strerror, internal_strerror),
     WRAPN(md5, internal_md5),
+    WRAPN(heapTakeSnapshot, heap_take_snapshot),
+    WRAPN(isAddressInHeap, is_address_in_heap),
+    WRAPN(isAddressActiveInHeap, is_address_active_in_heap),
+    WRAPN(isAddressUsedAfterFreeInHeap, is_address_used_after_free_in_heap),
+    WRAPN(getAddressSizeInHeap, get_address_size_in_heap),
+    WRAPN(msizeAddress, msize_address),
     { NULL, NULL }
 };
 

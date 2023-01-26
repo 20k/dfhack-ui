@@ -4279,7 +4279,7 @@ static int heap_take_snapshot()
     for (auto i : entries)
     {
         uintptr_t val = 0;
-        memcpy(&val, i.first, sizeof(void*));
+        memcpy(&val, &i.first, sizeof(void*));
         snapshot[val] = i.second;
     }
 

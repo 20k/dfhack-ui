@@ -4325,7 +4325,7 @@ static int get_heap_state()
         return 3;
     #endif
 
-    return 0
+    return 0;
 }
 
 static bool is_address_in_heap(uintptr_t ptr)

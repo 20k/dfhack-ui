@@ -4248,7 +4248,7 @@ struct heap_pointer_info
     int status = 0;
 };
 
-static std::map<void*, heap_pointer_info> snapshot;
+static std::map<uintptr_t, heap_pointer_info> snapshot;
 
 static int heap_take_snapshot()
 {
@@ -4278,7 +4278,9 @@ static int heap_take_snapshot()
 
     for (auto i : entries)
     {
-        snapshot[i.first] = i.second;
+        uintptr_t val = 0;
+        memcpy(&val, i.first, sizeof(void*));
+        snapshot[val] = i.second;
     }
 
     if (heapstatus == _HEAPEMPTY || heapstatus == _HEAPEND)
@@ -4330,16 +4332,12 @@ static int get_heap_state()
 
 static bool is_address_in_heap(uintptr_t ptr)
 {
-    void* vptr = address_to_pointer(ptr);
-
-    return snapshot.find(vptr) != snapshot.end();
+    return snapshot.find(ptr) != snapshot.end();
 }
 
 static bool is_address_active_in_heap(uintptr_t ptr)
 {
-    void* vptr = address_to_pointer(ptr);
-
-    auto it = snapshot.find(vptr);
+    auto it = snapshot.find(ptr);
 
     if (it == snapshot.end())
         return false;
@@ -4349,9 +4347,7 @@ static bool is_address_active_in_heap(uintptr_t ptr)
 
 static bool is_address_used_after_free_in_heap(uintptr_t ptr)
 {
-    void* vptr = address_to_pointer(ptr);
-
-    auto it = snapshot.find(vptr);
+    auto it = snapshot.find(ptr);
 
     if (it == snapshot.end())
         return false;
@@ -4361,14 +4357,54 @@ static bool is_address_used_after_free_in_heap(uintptr_t ptr)
 
 static int get_address_size_in_heap(uintptr_t ptr)
 {
-    void* vptr = address_to_pointer(ptr);
-
-    auto it = snapshot.find(vptr);
+    auto it = snapshot.find(ptr);
 
     if (it == snapshot.end())
         return -1;
 
     return it->second.size;
+}
+
+//eg if I have a struct, does any address lie within the struct?
+static uintptr_t get_root_address_of_heap_object(uintptr_t ptr, size_t search_distance)
+{
+    size_t memory_allocator_alignment = 4;
+
+    #ifdef _WIN32
+    memory_allocator_alignment = MEMORY_ALLOCATION_ALIGNMENT;
+    #endif
+
+    uintptr_t remainder = ptr % memory_allocator_alignment;
+
+    if (remainder == 0)
+    {
+        auto it = snapshot.find(ptr);
+
+        if (it != snapshot.end())
+            return ptr;
+    }
+
+    uintptr_t align = ptr - remainder;
+
+    for (size_t i=0; i < search_distance / memory_allocator_alignment; i++)
+    {
+        uintptr_t offset = align - i * memory_allocator_alignment;
+
+        auto map_find = snapshot.find(offset);
+
+        if (map_find != snapshot.end())
+        {
+            const heap_pointer_info& inf = map_find->second;
+
+            uintptr_t start = map_find->first;
+            uintptr_t fin = start + inf.size;
+
+            if (ptr >= start && ptr < fin)
+                return start;
+        }
+    }
+
+    return 0;
 }
 
 //msize crashes if you pass an invalid pointer to it, only use it if you *know* the thing you're looking at
@@ -4401,6 +4437,7 @@ static const LuaWrapper::FunctionReg dfhack_internal_module[] = {
     WRAPN(isAddressActiveInHeap, is_address_active_in_heap),
     WRAPN(isAddressUsedAfterFreeInHeap, is_address_used_after_free_in_heap),
     WRAPN(getAddressSizeInHeap, get_address_size_in_heap),
+    WRAPN(getRootAddressOfHeapObject, get_root_address_of_heap_object),
     WRAPN(msizeAddress, msize_address),
     { NULL, NULL }
 };

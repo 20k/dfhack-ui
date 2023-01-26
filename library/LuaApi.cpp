@@ -4248,7 +4248,7 @@ struct heap_pointer_info
     int status = 0;
 };
 
-std::map<void*, heap_pointer_info> snapshot;
+static std::map<void*, heap_pointer_info> snapshot;
 
 static int heap_take_snapshot()
 {

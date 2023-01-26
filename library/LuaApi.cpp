@@ -1425,8 +1425,76 @@ static int msize(void* ptr)
         return -1;
 
     #else
-    return -1
+    return -1;
     #endif
+}
+
+std::map<void*, uint64_t> snapshot;
+
+static void take_heap_snapshot()
+{
+    #ifdef _WIN32
+    snapshot.clear();
+
+    std::vector<std::pair<void*, int>> entries;
+
+    _HEAPINFO hinfo;
+    int heapstatus;
+    int numLoops;
+    hinfo._pentry = NULL;
+    numLoops = 0;
+    while((heapstatus = _heapwalk(&hinfo)) == _HEAPOK &&
+          numLoops < 1024*1024*1024)
+    {
+        if (hinfo._useflag == _USEDENTRY)
+        {
+            //snapshot[hinfo._pentry] = hinfo._size;
+
+            assert(numLoops <= entries.size());
+            entries.push_back({hinfo._pentry, hinfo._size});
+        }
+
+        numLoops++;
+    }
+
+    for (auto i : entries)
+    {
+        snapshot[i.first] = i.second;
+    }
+
+    #endif
+}
+
+static int query_heap(void* ptr)
+{
+    #ifdef _WIN32
+    auto it = snapshot.find(ptr);
+
+    if (it == snapshot.end())
+        return -1;
+
+    return it->second;
+    #endif
+
+    return -1;
+}
+
+
+static int query_heapa(uintptr_t ptr)
+{
+    #ifdef _WIN32
+    void* as_ptr = nullptr;
+    memcpy((void*)&as_ptr, &ptr, sizeof(uintptr_t));
+
+    auto it = snapshot.find(as_ptr);
+
+    if (it == snapshot.end())
+        return -1;
+
+    return it->second;
+    #endif
+
+    return -1;
 }
 
 #define WRAP_VERSION_FUNC(name, function) WRAPN(name, DFHack::Version::function)
@@ -1447,6 +1515,9 @@ static const LuaWrapper::FunctionReg dfhack_module[] = {
     WRAP(df2console),
     WRAP(toSearchNormalized),
     WRAP(msize),
+    WRAP(take_heap_snapshot),
+    WRAP(query_heap),
+    WRAP(query_heapa),
     WRAP_VERSION_FUNC(getDFHackVersion, dfhack_version),
     WRAP_VERSION_FUNC(getDFHackRelease, dfhack_release),
     WRAP_VERSION_FUNC(getDFHackBuildID, dfhack_build_id),

@@ -614,10 +614,6 @@ Miscellaneous
   both from the curry call and the closure call itself. I.e.
   ``curry(func,a,b)(c,d)`` equals ``func(a,b,c,d)``.
 
-* ``dfhack.msize(ptr)``
-
-  Returns the allocation size of a pointer. Windows only
-
 
 Locking and finalization
 ------------------------
@@ -2738,6 +2734,46 @@ and are only documented here for completeness:
 * ``dfhack.internal.threadid()``
 
   Returns a numeric identifier of the current thread.
+
+* ``dfhack.internal.msizeAddress(address)``
+
+  Returns the allocation size of an address. Windows only.
+  Does not require a heap snapshot. It will crash on an invalid pointer.
+  Windows only.
+
+* ``dfhack.internal.getHeapState()``
+
+  Returns the state of the heap. 0 == ok or empty, 1 == heap bad ptr, 2 == heap bad begin, 3 == heap bad node.
+  Does not require a heap snapshot. This may be unsafe to use directly from lua if the heap is corrupt.
+  Windows only.
+
+* ``dfhack.internal.heapTakeSnapshot()``
+
+  Clears any existing heap snapshot, and takes an internal heap snapshot for later consumption.
+  Windows only.
+  Returns the same values as getHeapState()
+
+* ``dfhack.internal.isAddressInHeap(address)``
+
+  Checks if an address is a member of the heap. It may be dangling.
+  Requires a heap snapshot.
+
+* ``dfhack.internal.isAddressActiveInHeap(address)``
+
+  Checks if an address is a member of the heap, and actively in use (ie valid).
+  Requires a heap snapshot.
+
+* ``dfhack.internal.isAddressUsedAfterFreeInHeap(address)``
+
+  Checks if an address is a member of the heap, but is not currently allocated (ie use after free).
+  Requires a heap snapshot.
+  Note that Windows eagerly removes freed pointers from the heap, so this is unlikely to fire.
+
+* ``dfhack.internal.getAddressSizeInHeap(address)``
+
+  Gets the allocated size of an address in the heap. Useful for detecting misaligns, as this does not return block size.
+  Requires a heap snapshot.
+
 
 .. _lua-core-context:
 

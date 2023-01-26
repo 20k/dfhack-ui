@@ -4306,6 +4306,28 @@ static void* address_to_pointer(uintptr_t ptr)
     return as_ptr;
 }
 
+//this function probably should not allocate. Then again we're shimming through lua which.... probably does
+static int get_heap_state()
+{
+    #ifdef _WIN32
+    int heapstatus = _heapchk();
+
+    if (heapstatus == _HEAPEMPTY || heapstatus == _HEAPOK)
+        return 0;
+
+    if (heapstatus == _HEAPBADPTR)
+        return 1;
+
+    if (heapstatus == _HEAPBADBEGIN)
+        return 2;
+
+    if (heapstatus == _HEAPBADNODE)
+        return 3;
+    #endif
+
+    return 0
+}
+
 static bool is_address_in_heap(uintptr_t ptr)
 {
     void* vptr = address_to_pointer(ptr);
@@ -4374,6 +4396,7 @@ static const LuaWrapper::FunctionReg dfhack_internal_module[] = {
     WRAPN(strerror, internal_strerror),
     WRAPN(md5, internal_md5),
     WRAPN(heapTakeSnapshot, heap_take_snapshot),
+    WRAPN(getHeapState, get_heap_state),
     WRAPN(isAddressInHeap, is_address_in_heap),
     WRAPN(isAddressActiveInHeap, is_address_active_in_heap),
     WRAPN(isAddressUsedAfterFreeInHeap, is_address_used_after_free_in_heap),

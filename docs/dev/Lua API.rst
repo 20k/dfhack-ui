@@ -2767,11 +2767,19 @@ and are only documented here for completeness:
 
   Checks if an address is a member of the heap, but is not currently allocated (ie use after free).
   Requires a heap snapshot.
-  Note that Windows eagerly removes freed pointers from the heap, so this is unlikely to fire.
+  Note that Windows eagerly removes freed pointers from the heap, so this is unlikely to trigger.
 
 * ``dfhack.internal.getAddressSizeInHeap(address)``
 
-  Gets the allocated size of an address in the heap. Useful for detecting misaligns, as this does not return block size.
+  Gets the allocated size of a member of the heap. Useful for detecting misaligns, as this does not return block size.
+  Requires a heap snapshot.
+
+* ``dfhack.internal.getRootAddressOfHeapObject(address)``
+
+  Gets the base heap allocation address of a address that lies internally within a piece of allocated memory.
+  Eg, if you have a heap allocated struct and call this function on the address of the second member.
+  it will return the address of the struct.
+  Returns 0 if the address is not found.
   Requires a heap snapshot.
 
 

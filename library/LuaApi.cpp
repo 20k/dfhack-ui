@@ -4249,14 +4249,11 @@ struct heap_pointer_info
 };
 
 static std::map<uintptr_t, heap_pointer_info> snapshot;
-//start, end
-static std::vector<std::pair<uintptr_t, uintptr_t>> linear_snapshot;
 
 static int heap_take_snapshot()
 {
     #ifdef _WIN32
     snapshot.clear();
-    linear_snapshot.clear();
 
     std::vector<std::pair<void*, heap_pointer_info>> entries;
     //heap allocating while iterating the heap is suboptimal
@@ -4284,7 +4281,6 @@ static int heap_take_snapshot()
         uintptr_t val = 0;
         memcpy(&val, &i.first, sizeof(void*));
         snapshot[val] = i.second;
-        linear_snapshot.push_back({val, val + i.second.size});
     }
 
     if (heapstatus == _HEAPEMPTY || heapstatus == _HEAPEND)
@@ -4298,7 +4294,6 @@ static int heap_take_snapshot()
 
     if (heapstatus == _HEAPBADNODE)
         return 3;
-
     #endif
 
     return 0;
@@ -4372,47 +4367,33 @@ static int get_address_size_in_heap(uintptr_t ptr)
 //eg if I have a struct, does any address lie within the struct?
 static uintptr_t get_root_address_of_heap_object(uintptr_t ptr)
 {
-    size_t memory_allocator_alignment = 4;
+    //find the first element strictly greater than our pointer
+    auto it = snapshot.upper_bound(ptr);
 
-    #ifdef _WIN32
-    memory_allocator_alignment = MEMORY_ALLOCATION_ALIGNMENT;
-    #endif
+    //if we're at the start of the snapshot, no elements are less than our pointer
+    //therefore it is invalid
+    if (it == snapshot.begin())
+        return 0;
 
-    uintptr_t remainder = ptr % memory_allocator_alignment;
+    //get the first element less than or equal to ours
+    it--;
 
-    if (remainder == 0)
-    {
-        auto it = snapshot.find(ptr);
-
-        if (it != snapshot.end())
-            return ptr;
-    }
-
-    for (auto i : linear_snapshot)
-    {
-        if (ptr >= i.first && ptr < i.second)
-            return i.first;
-    }
-
-    return 0;
+    //our pointer is only valid if we lie in the first pointer lower in memory than it
+    return ptr >= it->first && ptr < it->first + it->second.size;
 }
 
 //msize crashes if you pass an invalid pointer to it, only use it if you *know* the thing you're looking at
 //is in the heap/valid
 static int msize_address(uintptr_t ptr)
 {
-    #ifdef _WIN32
     void* vptr = address_to_pointer(ptr);
 
-    //https://devblogs.microsoft.com/oldnewthing/20120316-00/?p=8083 for details
+    #ifdef _WIN32
     if (vptr)
         return _msize(vptr);
-    else
-        return -1;
-
-    #else
-    return -1;
     #endif
+
+    return -1;
 }
 
 static const LuaWrapper::FunctionReg dfhack_internal_module[] = {

@@ -4379,7 +4379,10 @@ static uintptr_t get_root_address_of_heap_object(uintptr_t ptr)
     it--;
 
     //our pointer is only valid if we lie in the first pointer lower in memory than it
-    return ptr >= it->first && ptr < it->first + it->second.size;
+    if (ptr >= it->first && ptr < it->first + it->second.size)
+        return it->first;
+
+    return 0;
 }
 
 //msize crashes if you pass an invalid pointer to it, only use it if you *know* the thing you're looking at

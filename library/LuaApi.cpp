@@ -4256,6 +4256,7 @@ static int heap_take_snapshot()
 {
     #ifdef _WIN32
     snapshot.clear();
+    linear_snapshot.clear();
 
     std::vector<std::pair<void*, heap_pointer_info>> entries;
     //heap allocating while iterating the heap is suboptimal
@@ -4387,35 +4388,10 @@ static uintptr_t get_root_address_of_heap_object(uintptr_t ptr, size_t search_di
             return ptr;
     }
 
-    if (search_distance > 0)
+    for (auto i : linear_snapshot)
     {
-        uintptr_t align = ptr - remainder;
-
-        for (size_t i=0; i < search_distance / memory_allocator_alignment; i++)
-        {
-            uintptr_t offset = align - i * memory_allocator_alignment;
-
-            auto map_find = snapshot.find(offset);
-
-            if (map_find != snapshot.end())
-            {
-                const heap_pointer_info& inf = map_find->second;
-
-                uintptr_t start = map_find->first;
-                uintptr_t fin = start + inf.size;
-
-                if (ptr >= start && ptr < fin)
-                    return start;
-            }
-        }
-    }
-    else
-    {
-        for (auto i : linear_snapshot)
-        {
-            if (ptr >= i.first && ptr < i.second)
-                return i.first;
-        }
+        if (ptr >= i.first && ptr < i.second)
+            return i.first;
     }
 
     return 0;

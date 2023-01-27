@@ -4370,7 +4370,7 @@ static int get_address_size_in_heap(uintptr_t ptr)
 }
 
 //eg if I have a struct, does any address lie within the struct?
-static uintptr_t get_root_address_of_heap_object(uintptr_t ptr, size_t search_distance)
+static uintptr_t get_root_address_of_heap_object(uintptr_t ptr)
 {
     size_t memory_allocator_alignment = 4;
 

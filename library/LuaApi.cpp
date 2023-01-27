@@ -4249,6 +4249,8 @@ struct heap_pointer_info
 };
 
 static std::map<uintptr_t, heap_pointer_info> snapshot;
+//start, end
+static std::vector<std::pair<uintptr_t, uintptr_t>> linear_snapshot;
 
 static int heap_take_snapshot()
 {
@@ -4281,6 +4283,7 @@ static int heap_take_snapshot()
         uintptr_t val = 0;
         memcpy(&val, &i.first, sizeof(void*));
         snapshot[val] = i.second;
+        linear_snapshot.push_back({val, val + i.second.size});
     }
 
     if (heapstatus == _HEAPEMPTY || heapstatus == _HEAPEND)
@@ -4384,23 +4387,34 @@ static uintptr_t get_root_address_of_heap_object(uintptr_t ptr, size_t search_di
             return ptr;
     }
 
-    uintptr_t align = ptr - remainder;
-
-    for (size_t i=0; i < search_distance / memory_allocator_alignment; i++)
+    if (search_distance > 0)
     {
-        uintptr_t offset = align - i * memory_allocator_alignment;
+        uintptr_t align = ptr - remainder;
 
-        auto map_find = snapshot.find(offset);
-
-        if (map_find != snapshot.end())
+        for (size_t i=0; i < search_distance / memory_allocator_alignment; i++)
         {
-            const heap_pointer_info& inf = map_find->second;
+            uintptr_t offset = align - i * memory_allocator_alignment;
 
-            uintptr_t start = map_find->first;
-            uintptr_t fin = start + inf.size;
+            auto map_find = snapshot.find(offset);
 
-            if (ptr >= start && ptr < fin)
-                return start;
+            if (map_find != snapshot.end())
+            {
+                const heap_pointer_info& inf = map_find->second;
+
+                uintptr_t start = map_find->first;
+                uintptr_t fin = start + inf.size;
+
+                if (ptr >= start && ptr < fin)
+                    return start;
+            }
+        }
+    }
+    else
+    {
+        for (auto i : linear_snapshot)
+        {
+            if (ptr >= i.first && ptr < i.second)
+                return i.first;
         }
     }
 
